@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Calendar, CalendarIcon, ArrowRight, ArrowLeft, User, Users, UserPlus, UserRound, Mail, Phone, BookOpen, IdCard, Palette, Check, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -604,7 +605,7 @@ const Index = () => {
                             ) : (
                               <>
                                 <X className="w-3 h-3" />
-                                <span>{language === 'ar' ? 'مرفوض' : 'Rejected'}</span>
+                                <span>{language === 'ar' ? 'لم يتم بعد' : 'Not yet'}</span>
                               </>
                             )}
                           </div>
@@ -721,7 +722,7 @@ const Index = () => {
                     ) : (
                       <div className="flex items-center gap-2">
                         <X className="w-5 h-5" />
-                        {language === 'ar' ? 'مرفوض' : 'Rejected'}
+                        {language === 'ar' ? 'لم يتم بعد' : 'Not yet'}
                       </div>
                     )}
                   </div>
