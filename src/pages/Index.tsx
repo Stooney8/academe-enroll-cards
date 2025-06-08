@@ -120,6 +120,7 @@ const Index: React.FC = () => {
   const [currentTheme, setCurrentTheme] = useState<Theme>('dark');
   const [isLoading, setIsLoading] = useState(false);
   const [visibleNotes, setVisibleNotes] = useState<Set<string>>(new Set());
+  const [visibleDetailNotes, setVisibleDetailNotes] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -407,6 +408,10 @@ const Index: React.FC = () => {
       }
       return newSet;
     });
+  };
+
+  const toggleDetailNotesVisibility = () => {
+    setVisibleDetailNotes(prev => !prev);
   };
 
   const ThemeSelector = () => (
@@ -744,7 +749,7 @@ const Index: React.FC = () => {
                         </div>
                         <div className="flex-1">
                           <h3 
-                            className={`text-xl font-semibold ${theme.text} ${isRTL ? 'font-arabic' : ''} mb-1 cursor-pointer hover:underline`}
+                            className={`text-xl font-semibold ${theme.text} mb-1 cursor-pointer hover:underline`}
                             onClick={() => {
                               setSelectedStudent(student);
                               setCurrentPage('detail');
@@ -980,12 +985,28 @@ const Index: React.FC = () => {
 
                   {selectedStudent.notes && (
                     <div className={`bg-gradient-to-r ${theme.cardBg} p-6 rounded-xl shadow-lg`}>
-                      <p className={`${theme.accent} text-sm font-medium mb-2 ${isRTL ? 'font-arabic' : ''}`}>
-                        {t.notes}
-                      </p>
-                      <p className={`${theme.text} text-lg font-semibold`}>
-                        {selectedStudent.notes}
-                      </p>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className={`${theme.accent} text-sm font-medium ${isRTL ? 'font-arabic' : ''}`}>
+                          {t.notes}
+                        </p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={toggleDetailNotesVisibility}
+                          className={`h-6 w-6 p-0 ${theme.button}`}
+                        >
+                          {visibleDetailNotes ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </Button>
+                      </div>
+                      {visibleDetailNotes && (
+                        <p className={`${theme.text} text-lg font-semibold`}>
+                          {selectedStudent.notes}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
