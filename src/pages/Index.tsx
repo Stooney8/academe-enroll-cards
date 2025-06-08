@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Calendar, CalendarIcon, ArrowRight, ArrowLeft, User, Users, UserPlus, UserRound, Mail, Phone, BookOpen, IdCard, Palette, Check, X, FileText, Eye, EyeOff, Edit, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -219,6 +220,20 @@ const Index: React.FC = () => {
   const isRTL = language === 'ar';
   const theme = themes[currentTheme];
 
+  // Helper function to format date for Supabase (YYYY-MM-DD format without timezone conversion)
+  const formatDateForSupabase = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Helper function to parse date from Supabase (create date in local timezone)
+  const parseDateFromSupabase = (dateString: string): Date => {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
   // Load students from Supabase on component mount
   useEffect(() => {
     console.log('Component mounted, loading students...');
@@ -247,7 +262,7 @@ const Index: React.FC = () => {
         mobile: student.mobile,
         email: student.email,
         courseName: student.course_name,
-        courseDate: new Date(student.course_date),
+        courseDate: parseDateFromSupabase(student.course_date),
         age: student.age,
         accepted: student.accepted,
         notes: student.notes || '',
@@ -330,7 +345,7 @@ const Index: React.FC = () => {
           mobile: formData.mobile,
           email: formData.email,
           course_name: formData.courseName,
-          course_date: formData.courseDate!.toISOString().split('T')[0],
+          course_date: formatDateForSupabase(formData.courseDate!),
           age: formData.age,
           accepted: formData.accepted,
           notes: formData.notes,
@@ -348,7 +363,7 @@ const Index: React.FC = () => {
         mobile: data.mobile,
         email: data.email,
         courseName: data.course_name,
-        courseDate: new Date(data.course_date),
+        courseDate: parseDateFromSupabase(data.course_date),
         age: data.age,
         accepted: data.accepted,
         notes: data.notes || '',
@@ -484,7 +499,7 @@ const Index: React.FC = () => {
           mobile: editFormData.mobile,
           email: editFormData.email,
           course_name: editFormData.courseName,
-          course_date: editFormData.courseDate!.toISOString().split('T')[0],
+          course_date: formatDateForSupabase(editFormData.courseDate!),
           age: editFormData.age,
           accepted: editFormData.accepted,
           notes: editFormData.notes,
@@ -502,7 +517,7 @@ const Index: React.FC = () => {
         mobile: data.mobile,
         email: data.email,
         courseName: data.course_name,
-        courseDate: new Date(data.course_date),
+        courseDate: parseDateFromSupabase(data.course_date),
         age: data.age,
         accepted: data.accepted,
         notes: data.notes || '',
