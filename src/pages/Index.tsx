@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Calendar, CalendarIcon, ArrowRight, ArrowLeft, User, Users, UserPlus, UserRound, Mail, Phone, BookOpen, IdCard, Palette } from 'lucide-react';
+import { Calendar, CalendarIcon, ArrowRight, ArrowLeft, User, Users, UserPlus, UserRound, Mail, Phone, BookOpen, IdCard, Palette, Check, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Switch } from "@/components/ui/switch";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -18,78 +19,89 @@ interface Student {
   courseName: string;
   courseDate: Date;
   age: string;
+  accepted: boolean;
   icon: any;
 }
 
-type Theme = 'warm' | 'ocean' | 'forest' | 'sunset' | 'dark';
+type Theme = 'dark' | 'blue' | 'green' | 'purple' | 'orange';
 
 const LUCIDE_ICONS = [User, UserRound, UserPlus, BookOpen, Mail, Phone, IdCard];
 
 const themes = {
-  warm: {
-    name: 'Warm',
-    gradient: 'from-amber-900 via-orange-900 to-red-900',
-    cardBg: 'from-amber-800/40 to-orange-800/40',
-    cardBorder: 'border-amber-600/30',
-    text: 'text-amber-100',
-    textSecondary: 'text-amber-200/80',
-    textMuted: 'text-amber-300/50',
-    button: 'bg-amber-800/20 border-amber-600 text-amber-100 hover:bg-amber-700/30',
-    buttonPrimary: 'from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700',
-    input: 'bg-amber-900/30 border-amber-600/50 text-amber-100 placeholder-amber-300/50 focus:border-amber-400',
-    accent: 'text-amber-300'
-  },
-  ocean: {
-    name: 'Ocean',
-    gradient: 'from-blue-900 via-cyan-900 to-teal-900',
-    cardBg: 'from-blue-800/40 to-cyan-800/40',
-    cardBorder: 'border-blue-600/30',
-    text: 'text-blue-100',
-    textSecondary: 'text-blue-200/80',
-    textMuted: 'text-blue-300/50',
-    button: 'bg-blue-800/20 border-blue-600 text-blue-100 hover:bg-blue-700/30',
-    buttonPrimary: 'from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700',
-    input: 'bg-blue-900/30 border-blue-600/50 text-blue-100 placeholder-blue-300/50 focus:border-blue-400',
-    accent: 'text-blue-300'
-  },
-  forest: {
-    name: 'Forest',
-    gradient: 'from-green-900 via-emerald-900 to-teal-900',
-    cardBg: 'from-green-800/40 to-emerald-800/40',
-    cardBorder: 'border-green-600/30',
-    text: 'text-green-100',
-    textSecondary: 'text-green-200/80',
-    textMuted: 'text-green-300/50',
-    button: 'bg-green-800/20 border-green-600 text-green-100 hover:bg-green-700/30',
-    buttonPrimary: 'from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700',
-    input: 'bg-green-900/30 border-green-600/50 text-green-100 placeholder-green-300/50 focus:border-green-400',
-    accent: 'text-green-300'
-  },
-  sunset: {
-    name: 'Sunset',
-    gradient: 'from-purple-900 via-pink-900 to-rose-900',
-    cardBg: 'from-purple-800/40 to-pink-800/40',
-    cardBorder: 'border-purple-600/30',
-    text: 'text-purple-100',
-    textSecondary: 'text-purple-200/80',
-    textMuted: 'text-purple-300/50',
-    button: 'bg-purple-800/20 border-purple-600 text-purple-100 hover:bg-purple-700/30',
-    buttonPrimary: 'from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700',
-    input: 'bg-purple-900/30 border-purple-600/50 text-purple-100 placeholder-purple-300/50 focus:border-purple-400',
-    accent: 'text-purple-300'
-  },
   dark: {
     name: 'Dark',
-    gradient: 'from-gray-900 via-slate-900 to-zinc-900',
-    cardBg: 'from-gray-800/40 to-slate-800/40',
-    cardBorder: 'border-gray-600/30',
+    gradient: 'from-gray-900 via-slate-900 to-gray-900',
+    cardBg: 'from-gray-800/60 to-slate-800/60',
+    cardBorder: 'border-gray-700/50',
     text: 'text-gray-100',
-    textSecondary: 'text-gray-200/80',
-    textMuted: 'text-gray-300/50',
-    button: 'bg-gray-800/20 border-gray-600 text-gray-100 hover:bg-gray-700/30',
-    buttonPrimary: 'from-gray-600 to-slate-600 hover:from-gray-700 hover:to-slate-700',
-    input: 'bg-gray-900/30 border-gray-600/50 text-gray-100 placeholder-gray-300/50 focus:border-gray-400',
-    accent: 'text-gray-300'
+    textSecondary: 'text-gray-300',
+    textMuted: 'text-gray-500',
+    button: 'bg-gray-800/50 border-gray-600 text-gray-100 hover:bg-gray-700/60',
+    buttonPrimary: 'from-gray-700 to-slate-700 hover:from-gray-600 hover:to-slate-600',
+    input: 'bg-gray-800/50 border-gray-600 text-gray-100 placeholder-gray-400 focus:border-gray-400',
+    accent: 'text-gray-300',
+    accepted: 'bg-green-600/20 border-green-500/50 text-green-400',
+    rejected: 'bg-red-600/20 border-red-500/50 text-red-400'
+  },
+  blue: {
+    name: 'Ocean Blue',
+    gradient: 'from-blue-900 via-indigo-900 to-slate-900',
+    cardBg: 'from-blue-800/60 to-indigo-800/60',
+    cardBorder: 'border-blue-700/50',
+    text: 'text-blue-100',
+    textSecondary: 'text-blue-200',
+    textMuted: 'text-blue-400',
+    button: 'bg-blue-800/50 border-blue-600 text-blue-100 hover:bg-blue-700/60',
+    buttonPrimary: 'from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500',
+    input: 'bg-blue-800/50 border-blue-600 text-blue-100 placeholder-blue-300 focus:border-blue-400',
+    accent: 'text-blue-300',
+    accepted: 'bg-green-600/20 border-green-500/50 text-green-400',
+    rejected: 'bg-red-600/20 border-red-500/50 text-red-400'
+  },
+  green: {
+    name: 'Forest Green',
+    gradient: 'from-green-900 via-emerald-900 to-slate-900',
+    cardBg: 'from-green-800/60 to-emerald-800/60',
+    cardBorder: 'border-green-700/50',
+    text: 'text-green-100',
+    textSecondary: 'text-green-200',
+    textMuted: 'text-green-400',
+    button: 'bg-green-800/50 border-green-600 text-green-100 hover:bg-green-700/60',
+    buttonPrimary: 'from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500',
+    input: 'bg-green-800/50 border-green-600 text-green-100 placeholder-green-300 focus:border-green-400',
+    accent: 'text-green-300',
+    accepted: 'bg-green-600/20 border-green-500/50 text-green-400',
+    rejected: 'bg-red-600/20 border-red-500/50 text-red-400'
+  },
+  purple: {
+    name: 'Royal Purple',
+    gradient: 'from-purple-900 via-violet-900 to-slate-900',
+    cardBg: 'from-purple-800/60 to-violet-800/60',
+    cardBorder: 'border-purple-700/50',
+    text: 'text-purple-100',
+    textSecondary: 'text-purple-200',
+    textMuted: 'text-purple-400',
+    button: 'bg-purple-800/50 border-purple-600 text-purple-100 hover:bg-purple-700/60',
+    buttonPrimary: 'from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500',
+    input: 'bg-purple-800/50 border-purple-600 text-purple-100 placeholder-purple-300 focus:border-purple-400',
+    accent: 'text-purple-300',
+    accepted: 'bg-green-600/20 border-green-500/50 text-green-400',
+    rejected: 'bg-red-600/20 border-red-500/50 text-red-400'
+  },
+  orange: {
+    name: 'Sunset Orange',
+    gradient: 'from-orange-900 via-red-900 to-slate-900',
+    cardBg: 'from-orange-800/60 to-red-800/60',
+    cardBorder: 'border-orange-700/50',
+    text: 'text-orange-100',
+    textSecondary: 'text-orange-200',
+    textMuted: 'text-orange-400',
+    button: 'bg-orange-800/50 border-orange-600 text-orange-100 hover:bg-orange-700/60',
+    buttonPrimary: 'from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500',
+    input: 'bg-orange-800/50 border-orange-600 text-orange-100 placeholder-orange-300 focus:border-orange-400',
+    accent: 'text-orange-300',
+    accepted: 'bg-green-600/20 border-green-500/50 text-green-400',
+    rejected: 'bg-red-600/20 border-red-500/50 text-red-400'
   }
 };
 
@@ -98,7 +110,7 @@ const Index = () => {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [language, setLanguage] = useState<'ar' | 'en'>('ar');
-  const [currentTheme, setCurrentTheme] = useState<Theme>('warm');
+  const [currentTheme, setCurrentTheme] = useState<Theme>('dark');
   
   const [formData, setFormData] = useState({
     name: '',
@@ -107,7 +119,8 @@ const Index = () => {
     email: '',
     courseName: '',
     courseDate: null as Date | null,
-    age: ''
+    age: '',
+    accepted: false
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -125,6 +138,7 @@ const Index = () => {
       courseName: 'اسم البرنامج',
       courseDate: 'تاريخ البرنامج',
       age: 'العمر',
+      accepted: 'مقبول',
       submit: 'تسجيل',
       back: 'رجوع',
       studentList: 'قائمة الطلاب',
@@ -139,7 +153,8 @@ const Index = () => {
       invalidMobile: 'رقم الجوال يجب أن يكون 10 أرقام',
       registrationSuccess: 'تم التسجيل بنجاح!',
       language: 'اللغة',
-      theme: 'المظهر'
+      theme: 'المظهر',
+      status: 'الحالة'
     },
     en: {
       title: 'Academic Registration Platform',
@@ -153,6 +168,7 @@ const Index = () => {
       courseName: 'Course Name',
       courseDate: 'Course Date',
       age: 'Age',
+      accepted: 'Accepted',
       submit: 'Register',
       back: 'Back',
       studentList: 'Student List',
@@ -167,7 +183,8 @@ const Index = () => {
       invalidMobile: 'Mobile number must be 10 digits',
       registrationSuccess: 'Registration successful!',
       language: 'Language',
-      theme: 'Theme'
+      theme: 'Theme',
+      status: 'Status'
     }
   };
 
@@ -218,7 +235,8 @@ const Index = () => {
         email: '',
         courseName: '',
         courseDate: null,
-        age: ''
+        age: '',
+        accepted: false
       });
       setErrors({});
       
@@ -240,6 +258,14 @@ const Index = () => {
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
+  };
+
+  const toggleStudentAcceptance = (studentId: string) => {
+    setStudents(students.map(student => 
+      student.id === studentId 
+        ? { ...student, accepted: !student.accepted }
+        : student
+    ));
   };
 
   const ThemeSelector = () => (
@@ -454,6 +480,23 @@ const Index = () => {
                 {errors.courseDate && <p className="text-red-400 text-sm">{errors.courseDate}</p>}
               </div>
 
+              {/* Acceptance Status */}
+              <div className="space-y-2">
+                <Label className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
+                  {t.accepted}
+                </Label>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="accepted"
+                    checked={formData.accepted}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, accepted: checked }))}
+                  />
+                  <Label htmlFor="accepted" className={`${theme.textSecondary} text-sm`}>
+                    {formData.accepted ? (language === 'ar' ? 'مقبول' : 'Accepted') : (language === 'ar' ? 'غير مقبول' : 'Not Accepted')}
+                  </Label>
+                </div>
+              </div>
+
               {/* Submit Button */}
               <Button
                 type="submit"
@@ -523,24 +566,52 @@ const Index = () => {
               return (
                 <Card
                   key={student.id}
-                  className={`bg-gradient-to-br ${theme.cardBg} ${theme.cardBorder} backdrop-blur-sm hover:scale-105 transition-all duration-300 cursor-pointer hover:shadow-xl border`}
-                  onClick={() => {
-                    setSelectedStudent(student);
-                    setCurrentPage('detail');
-                  }}
+                  className={`bg-gradient-to-br ${theme.cardBg} ${theme.cardBorder} backdrop-blur-sm hover:scale-105 transition-all duration-300 border`}
                 >
                   <CardContent className="p-6">
-                    <div className="flex items-center mb-4">
-                      <div className={`bg-gradient-to-br ${theme.cardBg} p-3 rounded-full mr-4 shadow-lg`}>
-                        <IconComponent className={`w-8 h-8 ${theme.text}`} />
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center">
+                        <div className={`bg-gradient-to-br ${theme.cardBg} p-3 rounded-full mr-4 shadow-lg`}>
+                          <IconComponent className={`w-8 h-8 ${theme.text}`} />
+                        </div>
+                        <div className="flex-1">
+                          <h3 
+                            className={`text-xl font-semibold ${theme.text} ${isRTL ? 'font-arabic' : ''} mb-1 cursor-pointer hover:underline`}
+                            onClick={() => {
+                              setSelectedStudent(student);
+                              setCurrentPage('detail');
+                            }}
+                          >
+                            {student.name}
+                          </h3>
+                          <p className={`${theme.textSecondary} text-sm font-medium`}>
+                            {student.courseName}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <h3 className={`text-xl font-semibold ${theme.text} ${isRTL ? 'font-arabic' : ''} mb-1`}>
-                          {student.name}
-                        </h3>
-                        <p className={`${theme.textSecondary} text-sm font-medium`}>
-                          {student.courseName}
-                        </p>
+                      
+                      {/* Acceptance Toggle */}
+                      <div className="flex flex-col items-center gap-2">
+                        <div className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                          student.accepted ? theme.accepted : theme.rejected
+                        }`}>
+                          {student.accepted ? (
+                            <div className="flex items-center gap-1">
+                              <Check className="w-3 h-3" />
+                              {language === 'ar' ? 'مقبول' : 'Accepted'}
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1">
+                              <X className="w-3 h-3" />
+                              {language === 'ar' ? 'مرفوض' : 'Rejected'}
+                            </div>
+                          )}
+                        </div>
+                        <Switch
+                          checked={student.accepted}
+                          onCheckedChange={() => toggleStudentAcceptance(student.id)}
+                          size="sm"
+                        />
                       </div>
                     </div>
                     
@@ -613,17 +684,50 @@ const Index = () => {
           <Card className={`bg-gradient-to-br ${theme.cardBg} ${theme.cardBorder} backdrop-blur-sm border shadow-2xl`}>
             <CardContent className="p-8">
               {/* Header with Icon and Name */}
-              <div className="flex items-center mb-8">
-                <div className={`bg-gradient-to-br ${theme.cardBg} p-6 rounded-2xl mr-6 shadow-xl`}>
-                  <IconComponent className={`w-16 h-16 ${theme.text}`} />
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center">
+                  <div className={`bg-gradient-to-br ${theme.cardBg} p-6 rounded-2xl mr-6 shadow-xl`}>
+                    <IconComponent className={`w-16 h-16 ${theme.text}`} />
+                  </div>
+                  <div>
+                    <h2 className={`text-4xl font-bold ${theme.text} mb-2 ${isRTL ? 'font-arabic' : ''}`}>
+                      {selectedStudent.name}
+                    </h2>
+                    <p className={`text-xl ${theme.textSecondary} font-medium ${isRTL ? 'font-arabic' : ''}`}>
+                      {selectedStudent.courseName}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className={`text-4xl font-bold ${theme.text} mb-2 ${isRTL ? 'font-arabic' : ''}`}>
-                    {selectedStudent.name}
-                  </h2>
-                  <p className={`text-xl ${theme.textSecondary} font-medium ${isRTL ? 'font-arabic' : ''}`}>
-                    {selectedStudent.courseName}
+                
+                {/* Status Section */}
+                <div className="text-center">
+                  <p className={`${theme.textSecondary} text-sm mb-2 ${isRTL ? 'font-arabic' : ''}`}>
+                    {t.status}
                   </p>
+                  <div className={`px-4 py-2 rounded-lg text-lg font-medium border ${
+                    selectedStudent.accepted ? theme.accepted : theme.rejected
+                  }`}>
+                    {selectedStudent.accepted ? (
+                      <div className="flex items-center gap-2">
+                        <Check className="w-5 h-5" />
+                        {language === 'ar' ? 'مقبول' : 'Accepted'}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <X className="w-5 h-5" />
+                        {language === 'ar' ? 'مرفوض' : 'Rejected'}
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-4">
+                    <Switch
+                      checked={selectedStudent.accepted}
+                      onCheckedChange={() => {
+                        toggleStudentAcceptance(selectedStudent.id);
+                        setSelectedStudent({...selectedStudent, accepted: !selectedStudent.accepted});
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
 
