@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Save, FileText, Trash2, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Save, FileText, Trash2, Eye, EyeOff, ExternalLink } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -111,6 +111,60 @@ const Notes = () => {
     setIsEditing(false);
   };
 
+  const openNoteInNewTab = (note: Note) => {
+    const noteContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${note.title}</title>
+          <style>
+            body { 
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+              max-width: 800px; 
+              margin: 0 auto; 
+              padding: 2rem; 
+              line-height: 1.6;
+              background: #0f172a;
+              color: #e2e8f0;
+            }
+            h1 { 
+              color: #10b981; 
+              border-bottom: 2px solid #10b981; 
+              padding-bottom: 0.5rem; 
+            }
+            .meta { 
+              color: #64748b; 
+              font-size: 0.875rem; 
+              margin-bottom: 2rem; 
+            }
+            .content { 
+              white-space: pre-wrap; 
+              background: #1e293b;
+              padding: 1.5rem;
+              border-radius: 8px;
+              border: 1px solid #334155;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>${note.title}</h1>
+          <div class="meta">
+            Created: ${note.createdAt.toLocaleDateString()} | 
+            Updated: ${note.updatedAt.toLocaleDateString()}
+          </div>
+          <div class="content">${note.content || 'No content'}</div>
+        </body>
+      </html>
+    `;
+    
+    const blob = new Blob([noteContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    
+    // Clean up the URL after a short delay
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 p-4">
       <div className="max-w-7xl mx-auto">
@@ -167,7 +221,7 @@ const Notes = () => {
                     notes.map((note) => (
                       <div
                         key={note.id}
-                        className={`p-3 rounded-lg cursor-pointer transition-all duration-200 border ${
+                        className={`group p-3 rounded-lg cursor-pointer transition-all duration-200 border ${
                           currentNote?.id === note.id
                             ? 'bg-gray-700/60 border-gray-500'
                             : 'bg-gray-800/40 border-gray-700/30 hover:bg-gray-700/40'
@@ -186,17 +240,32 @@ const Notes = () => {
                               {note.updatedAt.toLocaleDateString()}
                             </p>
                           </div>
-                          <Button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteNote(note.id);
-                            }}
-                            variant="ghost"
-                            size="sm"
-                            className="text-gray-400 hover:text-red-400 hover:bg-red-600/20"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openNoteInNewTab(note);
+                              }}
+                              variant="ghost"
+                              size="sm"
+                              className="text-gray-400 hover:text-blue-400 hover:bg-blue-600/20"
+                              title="Open in new tab"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteNote(note.id);
+                              }}
+                              variant="ghost"
+                              size="sm"
+                              className="text-gray-400 hover:text-red-400 hover:bg-red-600/20"
+                              title="Delete note"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     ))
@@ -215,6 +284,17 @@ const Notes = () => {
                     {isEditing ? (currentNote ? 'Edit Note' : 'New Note') : 'View Note'}
                   </CardTitle>
                   <div className="flex gap-2">
+                    {currentNote && (
+                      <Button
+                        onClick={() => openNoteInNewTab(currentNote)}
+                        variant="outline"
+                        className="bg-gray-800/50 border-gray-600 text-gray-100 hover:bg-gray-700/60"
+                        title="Open in new tab"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Open in Tab
+                      </Button>
+                    )}
                     {isEditing ? (
                       <>
                         <Button
