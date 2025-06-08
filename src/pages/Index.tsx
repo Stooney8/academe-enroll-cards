@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Edit3, Plus, Users, GraduationCap, UserCheck, Search, Eye, EyeOff, FileText } from "lucide-react";
+import { Trash2, Edit3, Plus, Users, GraduationCap, UserCheck, Search, Eye, EyeOff, FileText, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -557,11 +558,18 @@ const Index = () => {
                           <Badge variant="outline" className="border-primary/30">
                             {student.course_name}
                           </Badge>
-                          {student.accepted && (
-                            <Badge variant="default" className="bg-green-600">
-                              Accepted
+                          
+                          {/* Acceptance Status Badge */}
+                          <div className="flex items-center gap-2">
+                            <Info className="h-4 w-4 text-muted-foreground" />
+                            <Badge 
+                              variant={student.accepted ? "default" : "secondary"}
+                              className={student.accepted ? "bg-green-600 hover:bg-green-700" : "bg-orange-500 hover:bg-orange-600"}
+                            >
+                              {student.accepted ? "Accepted" : "Not Yet Accepted"}
                             </Badge>
-                          )}
+                          </div>
+                          
                           {student.notes && (
                             <Button
                               variant="ghost"
