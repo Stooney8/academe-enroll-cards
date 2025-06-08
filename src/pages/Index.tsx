@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Calendar, CalendarIcon, ArrowRight, ArrowLeft, User, Users, UserPlus, UserRound, Mail, Phone, BookOpen, IdCard, Palette, Check, X } from 'lucide-react';
+import { Calendar, CalendarIcon, ArrowRight, ArrowLeft, User, Users, UserPlus, UserRound, Mail, Phone, BookOpen, IdCard, Palette, Check, X, FileText } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +9,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Switch } from "@/components/ui/switch";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useNavigate } from 'react-router-dom';
 
 interface Student {
   id: string;
@@ -107,6 +107,7 @@ const themes = {
 };
 
 const Index = () => {
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState<'home' | 'list' | 'detail'>('home');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
@@ -303,7 +304,17 @@ const Index = () => {
       <div className="max-w-2xl mx-auto">
         {/* Header Controls */}
         <div className="flex justify-between items-center mb-6">
-          <ThemeSelector />
+          <div className="flex gap-2">
+            <ThemeSelector />
+            <Button
+              onClick={() => navigate('/notes')}
+              variant="outline"
+              className={`${theme.button} gap-2`}
+            >
+              <FileText className="w-4 h-4" />
+              {language === 'ar' ? 'ملاحظاتي' : 'My Notes'}
+            </Button>
+          </div>
           <Button
             variant="outline"
             onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
