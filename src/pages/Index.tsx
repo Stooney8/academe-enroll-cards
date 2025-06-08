@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Edit3, Plus, Users, GraduationCap, UserCheck, Search, Eye, EyeOff, FileText, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,6 +74,41 @@ const Index = () => {
       }
       return newSet;
     });
+  };
+
+  // Handle acceptance toggle
+  const handleAcceptanceToggle = async (studentId: string, currentStatus: boolean) => {
+    if (!isAdmin) {
+      toast({
+        title: "Access Denied",
+        description: "Only administrators can change acceptance status",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("students")
+        .update({ accepted: !currentStatus })
+        .eq("id", studentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Student ${!currentStatus ? "accepted" : "marked as not accepted"}`,
+      });
+
+      fetchStudents();
+    } catch (error: any) {
+      console.error("Error updating acceptance status:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update acceptance status",
+        variant: "destructive",
+      });
+    }
   };
 
   // Fetch students
@@ -609,7 +644,14 @@ const Index = () => {
                       </div>
                       
                       {isAdmin && (
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 items-center">
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={student.accepted}
+                              onCheckedChange={() => handleAcceptanceToggle(student.id, student.accepted)}
+                            />
+                            <span className="text-sm text-muted-foreground">Accept</span>
+                          </div>
                           <Button
                             variant="outline"
                             size="sm"
