@@ -14,27 +14,37 @@ import { useAuth } from "@/hooks/useAuth";
 
 interface Student {
   id: string;
-  first_name: string;
-  last_name: string;
-  student_id: string;
+  name: string;
+  id_number: string;
   email: string;
-  level: string;
+  mobile: string;
+  age: string;
+  course_name: string;
+  course_date: string;
+  accepted: boolean;
+  notes: string | null;
+  icon_type: string | null;
   created_at: string;
+  updated_at: string;
+  user_id: string | null;
 }
 
 const Index = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [levelFilter, setLevelFilter] = useState("all");
+  const [courseFilter, setCourseFilter] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
-    student_id: "",
+    name: "",
+    id_number: "",
     email: "",
-    level: "",
+    mobile: "",
+    age: "",
+    course_name: "",
+    course_date: "",
+    notes: "",
   });
 
   const { toast } = useToast();
@@ -76,24 +86,30 @@ const Index = () => {
   // Filter students
   const filteredStudents = students.filter((student) => {
     const matchesSearch = 
-      student.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.student_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.email.toLowerCase().includes(searchTerm.toLowerCase());
+      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.id_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.mobile.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesLevel = levelFilter === "all" || student.level === levelFilter;
+    const matchesCourse = courseFilter === "all" || student.course_name === courseFilter;
 
-    return matchesSearch && matchesLevel;
+    return matchesSearch && matchesCourse;
   });
+
+  // Get unique course names for filter
+  const uniqueCourses = [...new Set(students.map(student => student.course_name))];
 
   // Reset form
   const resetForm = () => {
     setFormData({
-      first_name: "",
-      last_name: "",
-      student_id: "",
+      name: "",
+      id_number: "",
       email: "",
-      level: "",
+      mobile: "",
+      age: "",
+      course_name: "",
+      course_date: "",
+      notes: "",
     });
     setEditingStudent(null);
   };
@@ -165,11 +181,14 @@ const Index = () => {
 
     setEditingStudent(student);
     setFormData({
-      first_name: student.first_name,
-      last_name: student.last_name,
-      student_id: student.student_id,
+      name: student.name,
+      id_number: student.id_number,
       email: student.email,
-      level: student.level,
+      mobile: student.mobile,
+      age: student.age,
+      course_name: student.course_name,
+      course_date: student.course_date,
+      notes: student.notes || "",
     });
     setIsDialogOpen(true);
   };
@@ -298,21 +317,23 @@ const Index = () => {
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <Input
-                  placeholder="Search by name, ID, or email..."
+                  placeholder="Search by name, ID, email, or mobile..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="bg-background/50 border-primary/30"
                 />
               </div>
-              <Select value={levelFilter} onValueChange={setLevelFilter}>
+              <Select value={courseFilter} onValueChange={setCourseFilter}>
                 <SelectTrigger className="w-full sm:w-48 bg-background/50 border-primary/30">
-                  <SelectValue placeholder="Filter by level" />
+                  <SelectValue placeholder="Filter by course" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Levels</SelectItem>
-                  <SelectItem value="Beginner">Beginner</SelectItem>
-                  <SelectItem value="Intermediate">Intermediate</SelectItem>
-                  <SelectItem value="Advanced">Advanced</SelectItem>
+                  <SelectItem value="all">All Courses</SelectItem>
+                  {uniqueCourses.map((course) => (
+                    <SelectItem key={course} value={course}>
+                      {course}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               {isAdmin && (
@@ -323,7 +344,7 @@ const Index = () => {
                       Add Student
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="card-gradient border-primary/30">
+                  <DialogContent className="card-gradient border-primary/30 max-w-2xl">
                     <DialogHeader>
                       <DialogTitle>
                         {editingStudent ? "Edit Student" : "Add New Student"}
@@ -337,24 +358,77 @@ const Index = () => {
                     <form onSubmit={handleSubmit} className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="first_name">First Name</Label>
+                          <Label htmlFor="name">Full Name</Label>
                           <Input
-                            id="first_name"
-                            value={formData.first_name}
+                            id="name"
+                            value={formData.name}
                             onChange={(e) =>
-                              setFormData({ ...formData, first_name: e.target.value })
+                              setFormData({ ...formData, name: e.target.value })
                             }
                             required
                             className="bg-background/50 border-primary/30"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="last_name">Last Name</Label>
+                          <Label htmlFor="id_number">ID Number</Label>
                           <Input
-                            id="last_name"
-                            value={formData.last_name}
+                            id="id_number"
+                            value={formData.id_number}
                             onChange={(e) =>
-                              setFormData({ ...formData, last_name: e.target.value })
+                              setFormData({ ...formData, id_number: e.target.value })
+                            }
+                            required
+                            className="bg-background/50 border-primary/30"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) =>
+                              setFormData({ ...formData, email: e.target.value })
+                            }
+                            required
+                            className="bg-background/50 border-primary/30"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="mobile">Mobile</Label>
+                          <Input
+                            id="mobile"
+                            value={formData.mobile}
+                            onChange={(e) =>
+                              setFormData({ ...formData, mobile: e.target.value })
+                            }
+                            required
+                            className="bg-background/50 border-primary/30"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="age">Age</Label>
+                          <Input
+                            id="age"
+                            value={formData.age}
+                            onChange={(e) =>
+                              setFormData({ ...formData, age: e.target.value })
+                            }
+                            required
+                            className="bg-background/50 border-primary/30"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="course_name">Course Name</Label>
+                          <Input
+                            id="course_name"
+                            value={formData.course_name}
+                            onChange={(e) =>
+                              setFormData({ ...formData, course_name: e.target.value })
                             }
                             required
                             className="bg-background/50 border-primary/30"
@@ -362,47 +436,28 @@ const Index = () => {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="student_id">Student ID</Label>
+                        <Label htmlFor="course_date">Course Date</Label>
                         <Input
-                          id="student_id"
-                          value={formData.student_id}
+                          id="course_date"
+                          type="date"
+                          value={formData.course_date}
                           onChange={(e) =>
-                            setFormData({ ...formData, student_id: e.target.value })
+                            setFormData({ ...formData, course_date: e.target.value })
                           }
                           required
                           className="bg-background/50 border-primary/30"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
+                        <Label htmlFor="notes">Notes (Optional)</Label>
                         <Input
-                          id="email"
-                          type="email"
-                          value={formData.email}
+                          id="notes"
+                          value={formData.notes}
                           onChange={(e) =>
-                            setFormData({ ...formData, email: e.target.value })
+                            setFormData({ ...formData, notes: e.target.value })
                           }
-                          required
                           className="bg-background/50 border-primary/30"
                         />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="level">Level</Label>
-                        <Select
-                          value={formData.level}
-                          onValueChange={(value) =>
-                            setFormData({ ...formData, level: value })
-                          }
-                        >
-                          <SelectTrigger className="bg-background/50 border-primary/30">
-                            <SelectValue placeholder="Select level" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Beginner">Beginner</SelectItem>
-                            <SelectItem value="Intermediate">Intermediate</SelectItem>
-                            <SelectItem value="Advanced">Advanced</SelectItem>
-                          </SelectContent>
-                        </Select>
                       </div>
                       <DialogFooter>
                         <Button
@@ -432,7 +487,7 @@ const Index = () => {
                 <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No students found</h3>
                 <p className="text-muted-foreground">
-                  {searchTerm || levelFilter !== "all"
+                  {searchTerm || courseFilter !== "all"
                     ? "Try adjusting your search filters"
                     : "Get started by adding your first student"}
                 </p>
@@ -447,15 +502,26 @@ const Index = () => {
                       <div className="space-y-2">
                         <div className="flex items-center gap-3">
                           <h3 className="text-lg font-semibold text-primary">
-                            {student.first_name} {student.last_name}
+                            {student.name}
                           </h3>
                           <Badge variant="outline" className="border-primary/30">
-                            {student.level}
+                            {student.course_name}
                           </Badge>
+                          {student.accepted && (
+                            <Badge variant="default" className="bg-green-600">
+                              Accepted
+                            </Badge>
+                          )}
                         </div>
                         <div className="text-sm text-muted-foreground space-y-1">
-                          <p><span className="font-medium">ID:</span> {student.student_id}</p>
+                          <p><span className="font-medium">ID:</span> {student.id_number}</p>
                           <p><span className="font-medium">Email:</span> {student.email}</p>
+                          <p><span className="font-medium">Mobile:</span> {student.mobile}</p>
+                          <p><span className="font-medium">Age:</span> {student.age}</p>
+                          <p><span className="font-medium">Course Date:</span> {new Date(student.course_date).toLocaleDateString()}</p>
+                          {student.notes && (
+                            <p><span className="font-medium">Notes:</span> {student.notes}</p>
+                          )}
                           <p><span className="font-medium">Added:</span> {new Date(student.created_at).toLocaleDateString()}</p>
                         </div>
                       </div>
