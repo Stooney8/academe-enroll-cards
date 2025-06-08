@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +32,7 @@ interface Student {
 }
 
 const Index = () => {
+  const navigate = useNavigate();
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -627,6 +629,7 @@ const Index = () => {
                           </div>
                         </div>
                         
+                        {/* Course Badge */}
                         <Badge variant="outline" className="border-primary/30 text-xs w-fit">
                           {student.course_name}
                         </Badge>
