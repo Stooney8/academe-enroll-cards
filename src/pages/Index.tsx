@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,7 @@ interface Student {
   icon_type: string | null;
   created_at: string;
   updated_at: string;
-  user_id: string | null;
+  user_id: string;
 }
 
 const Index = () => {
@@ -96,7 +97,15 @@ const Index = () => {
         .update({ accepted: !currentStatus })
         .eq("id", studentId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating acceptance status:", error);
+        toast({
+          title: "Error",
+          description: "Failed to update acceptance status",
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: "Success",
@@ -116,6 +125,12 @@ const Index = () => {
 
   // Fetch students
   const fetchStudents = async () => {
+    if (!user) {
+      console.log("No user found, skipping fetch");
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -133,6 +148,7 @@ const Index = () => {
         return;
       }
 
+      console.log("Fetched students:", data);
       setStudents(data || []);
     } catch (error) {
       console.error("Error in fetchStudents:", error);
@@ -142,8 +158,11 @@ const Index = () => {
   };
 
   useEffect(() => {
-    fetchStudents();
-  }, []);
+    // Only fetch students if user is authenticated
+    if (user) {
+      fetchStudents();
+    }
+  }, [user]);
 
   // Filter students
   const filteredStudents = students.filter((student) => {
@@ -180,10 +199,19 @@ const Index = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!isAdmin) {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "You must be logged in to manage students",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isAdmin && !isTeacher) {
       toast({
         title: "Access Denied",
-        description: "Only administrators can modify student records",
+        description: "Only administrators and teachers can modify student records",
         variant: "destructive",
       });
       return;
@@ -216,19 +244,40 @@ const Index = () => {
           .update(formData)
           .eq("id", editingStudent.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error updating student:", error);
+          toast({
+            title: "Error",
+            description: error.message || "Failed to update student",
+            variant: "destructive",
+          });
+          return;
+        }
 
         toast({
           title: "Success",
           description: "Student updated successfully",
         });
       } else {
-        // Create new student
+        // Create new student - include user_id for RLS
+        const studentData = {
+          ...formData,
+          user_id: user.id, // This is required for RLS policies
+        };
+
         const { error } = await supabase
           .from("students")
-          .insert([formData]);
+          .insert([studentData]);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error creating student:", error);
+          toast({
+            title: "Error",
+            description: error.message || "Failed to create student",
+            variant: "destructive",
+          });
+          return;
+        }
 
         toast({
           title: "Success",
@@ -251,10 +300,10 @@ const Index = () => {
 
   // Handle edit
   const handleEdit = (student: Student) => {
-    if (!isAdmin) {
+    if (!isAdmin && student.user_id !== user?.id) {
       toast({
         title: "Access Denied",
-        description: "Only administrators can edit student records",
+        description: "You can only edit students you created",
         variant: "destructive",
       });
       return;
@@ -276,10 +325,12 @@ const Index = () => {
 
   // Handle delete
   const handleDelete = async (studentId: string) => {
-    if (!isAdmin) {
+    const student = students.find(s => s.id === studentId);
+    
+    if (!isAdmin && student?.user_id !== user?.id) {
       toast({
         title: "Access Denied",
-        description: "Only administrators can delete student records",
+        description: "You can only delete students you created",
         variant: "destructive",
       });
       return;
@@ -293,7 +344,15 @@ const Index = () => {
         .delete()
         .eq("id", studentId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error deleting student:", error);
+        toast({
+          title: "Error",
+          description: "Failed to delete student",
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: "Success",
@@ -419,7 +478,7 @@ const Index = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                {isAdmin && (
+                {(isAdmin || isTeacher) && (
                   <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
                       <Button onClick={resetForm} className="w-full sm:w-auto text-sm">
@@ -673,19 +732,21 @@ const Index = () => {
                         </div>
                       )}
 
-                      {/* Action Buttons */}
-                      {isAdmin && (
+                      {/* Action Buttons - Only show if user has permission */}
+                      {(isAdmin || student.user_id === user?.id) && (
                         <div className="flex flex-col gap-2 pt-2 border-t border-primary/10">
-                          <div className="flex items-center justify-center gap-2">
-                            <Switch
-                              checked={student.accepted}
-                              onCheckedChange={() => handleAcceptanceToggle(student.id, student.accepted)}
-                              className="scale-75"
-                            />
-                            <span className="text-xs text-muted-foreground">
-                              {student.accepted ? "Accepted" : "Accept Student"}
-                            </span>
-                          </div>
+                          {isAdmin && (
+                            <div className="flex items-center justify-center gap-2">
+                              <Switch
+                                checked={student.accepted}
+                                onCheckedChange={() => handleAcceptanceToggle(student.id, student.accepted)}
+                                className="scale-75"
+                              />
+                              <span className="text-xs text-muted-foreground">
+                                {student.accepted ? "Accepted" : "Accept Student"}
+                              </span>
+                            </div>
+                          )}
                           
                           <div className="flex gap-2">
                             <Button

@@ -84,7 +84,7 @@ export type Database = {
           name: string
           notes: string | null
           updated_at: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           accepted?: boolean
@@ -100,7 +100,7 @@ export type Database = {
           name: string
           notes?: string | null
           updated_at?: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           accepted?: boolean
@@ -116,7 +116,7 @@ export type Database = {
           name?: string
           notes?: string | null
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
