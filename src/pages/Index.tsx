@@ -110,7 +110,7 @@ const themes = {
   }
 };
 
-const Index = () => {
+const Index: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [currentPage, setCurrentPage] = useState<'home' | 'list' | 'detail'>('home');
@@ -207,17 +207,24 @@ const Index = () => {
 
   // Load students from Supabase on component mount
   useEffect(() => {
+    console.log('Component mounted, loading students...');
     loadStudents();
   }, []);
 
   const loadStudents = async () => {
     try {
+      console.log('Loading students from Supabase...');
       const { data, error } = await supabase
         .from('students')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Students data received:', data);
 
       const formattedStudents = data.map(student => ({
         id: student.id,
@@ -233,6 +240,7 @@ const Index = () => {
         icon: student.icon_type ? LUCIDE_ICONS.find(icon => icon.name === student.icon_type) || LUCIDE_ICONS[0] : LUCIDE_ICONS[0]
       }));
 
+      console.log('Formatted students:', formattedStudents);
       setStudents(formattedStudents);
     } catch (error) {
       console.error('Error loading students:', error);
