@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, CalendarIcon, ArrowRight, ArrowLeft, User, Users, UserPlus, UserRound, Mail, Phone, BookOpen, IdCard, Palette, Check, X, FileText } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,9 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useNavigate } from 'react-router-dom';
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface Student {
   id: string;
@@ -21,6 +24,7 @@ interface Student {
   courseDate: Date;
   age: string;
   accepted: boolean;
+  notes?: string;
   icon: any;
 }
 
@@ -108,11 +112,13 @@ const themes = {
 
 const Index = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [currentPage, setCurrentPage] = useState<'home' | 'list' | 'detail'>('home');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
-  const [language, setLanguage] = useState<'ar' | 'en'>('en'); // Changed default to English
+  const [language, setLanguage] = useState<'ar' | 'en'>('en');
   const [currentTheme, setCurrentTheme] = useState<Theme>('dark');
+  const [isLoading, setIsLoading] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -122,7 +128,8 @@ const Index = () => {
     courseName: '',
     courseDate: null as Date | null,
     age: '',
-    accepted: false
+    accepted: false,
+    notes: ''
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -141,6 +148,7 @@ const Index = () => {
       courseDate: 'تاريخ البرنامج',
       age: 'العمر',
       accepted: 'مقبول',
+      notes: 'ملاحظات',
       submit: 'تسجيل',
       back: 'رجوع',
       studentList: 'قائمة الطلاب',
@@ -156,7 +164,8 @@ const Index = () => {
       registrationSuccess: 'تم التسجيل بنجاح!',
       language: 'اللغة',
       theme: 'المظهر',
-      status: 'الحالة'
+      status: 'الحالة',
+      loading: 'جاري التحميل...'
     },
     en: {
       title: 'Academic Registration Platform',
@@ -171,6 +180,7 @@ const Index = () => {
       courseDate: 'Course Date',
       age: 'Age',
       accepted: 'Accepted',
+      notes: 'Notes',
       submit: 'Register',
       back: 'Back',
       studentList: 'Student List',
@@ -186,13 +196,53 @@ const Index = () => {
       registrationSuccess: 'Registration successful!',
       language: 'Language',
       theme: 'Theme',
-      status: 'Status'
+      status: 'Status',
+      loading: 'Loading...'
     }
   };
 
   const t = translations[language];
   const isRTL = language === 'ar';
   const theme = themes[currentTheme];
+
+  // Load students from Supabase on component mount
+  useEffect(() => {
+    loadStudents();
+  }, []);
+
+  const loadStudents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('students')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const formattedStudents = data.map(student => ({
+        id: student.id,
+        name: student.name,
+        idNumber: student.id_number,
+        mobile: student.mobile,
+        email: student.email,
+        courseName: student.course_name,
+        courseDate: new Date(student.course_date),
+        age: student.age,
+        accepted: student.accepted,
+        notes: student.notes || '',
+        icon: student.icon_type ? LUCIDE_ICONS.find(icon => icon.name === student.icon_type) || LUCIDE_ICONS[0] : LUCIDE_ICONS[0]
+      }));
+
+      setStudents(formattedStudents);
+    } catch (error) {
+      console.error('Error loading students:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load students",
+        variant: "destructive",
+      });
+    }
+  };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -218,18 +268,48 @@ const Index = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
+    if (!validateForm()) return;
+
+    setIsLoading(true);
+    try {
       const randomIcon = LUCIDE_ICONS[Math.floor(Math.random() * LUCIDE_ICONS.length)];
+      
+      const { data, error } = await supabase
+        .from('students')
+        .insert({
+          name: formData.name,
+          id_number: formData.idNumber,
+          mobile: formData.mobile,
+          email: formData.email,
+          course_name: formData.courseName,
+          course_date: formData.courseDate!.toISOString().split('T')[0],
+          age: formData.age,
+          accepted: formData.accepted,
+          notes: formData.notes,
+          icon_type: randomIcon.name
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
       const newStudent: Student = {
-        id: Date.now().toString(),
-        ...formData,
-        courseDate: formData.courseDate!,
+        id: data.id,
+        name: data.name,
+        idNumber: data.id_number,
+        mobile: data.mobile,
+        email: data.email,
+        courseName: data.course_name,
+        courseDate: new Date(data.course_date),
+        age: data.age,
+        accepted: data.accepted,
+        notes: data.notes || '',
         icon: randomIcon
       };
       
-      setStudents([...students, newStudent]);
+      setStudents([newStudent, ...students]);
       setFormData({
         name: '',
         idNumber: '',
@@ -238,13 +318,28 @@ const Index = () => {
         courseName: '',
         courseDate: null,
         age: '',
-        accepted: false
+        accepted: false,
+        notes: ''
       });
       setErrors({});
       
+      toast({
+        title: t.registrationSuccess,
+        description: "Student has been registered successfully",
+      });
+
       setTimeout(() => {
         setCurrentPage('list');
       }, 1000);
+    } catch (error: any) {
+      console.error('Error saving student:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to register student",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -262,12 +357,35 @@ const Index = () => {
     }
   };
 
-  const toggleStudentAcceptance = (studentId: string) => {
-    setStudents(students.map(student => 
-      student.id === studentId 
-        ? { ...student, accepted: !student.accepted }
-        : student
-    ));
+  const toggleStudentAcceptance = async (studentId: string) => {
+    try {
+      const student = students.find(s => s.id === studentId);
+      if (!student) return;
+
+      const { error } = await supabase
+        .from('students')
+        .update({ accepted: !student.accepted })
+        .eq('id', studentId);
+
+      if (error) throw error;
+
+      setStudents(students.map(student => 
+        student.id === studentId 
+          ? { ...student, accepted: !student.accepted }
+          : student
+      ));
+
+      if (selectedStudent?.id === studentId) {
+        setSelectedStudent({ ...selectedStudent, accepted: !selectedStudent.accepted });
+      }
+    } catch (error) {
+      console.error('Error updating student:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update student status",
+        variant: "destructive",
+      });
+    }
   };
 
   const ThemeSelector = () => (
@@ -492,6 +610,21 @@ const Index = () => {
                 {errors.courseDate && <p className="text-red-400 text-sm">{errors.courseDate}</p>}
               </div>
 
+              {/* Notes */}
+              <div className="space-y-2">
+                <Label htmlFor="notes" className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
+                  {t.notes}
+                </Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                  placeholder={language === 'ar' ? 'أدخل ملاحظات حول الطالب...' : 'Enter notes about the student...'}
+                  className={`${theme.input} resize-none`}
+                  rows={3}
+                />
+              </div>
+
               {/* Acceptance Status */}
               <div className="space-y-2">
                 <Label className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
@@ -504,7 +637,7 @@ const Index = () => {
                     onCheckedChange={(checked) => setFormData(prev => ({ ...prev, accepted: checked }))}
                   />
                   <Label htmlFor="accepted" className={`${theme.textSecondary} text-sm`}>
-                    {formData.accepted ? (language === 'ar' ? 'مقبول' : 'Accepted') : (language === 'ar' ? 'غير مقبول' : 'Not Accepted')}
+                    {formData.accepted ? (language === 'ar' ? 'مقبول' : 'Accepted') : (language === 'ar' ? 'لم يتم بعد' : 'Not yet')}
                   </Label>
                 </div>
               </div>
@@ -512,9 +645,10 @@ const Index = () => {
               {/* Submit Button */}
               <Button
                 type="submit"
+                disabled={isLoading}
                 className={`w-full bg-gradient-to-r ${theme.buttonPrimary} text-white font-semibold py-3 text-lg`}
               >
-                {t.submit}
+                {isLoading ? t.loading : t.submit}
               </Button>
             </form>
           </CardContent>
@@ -602,7 +736,6 @@ const Index = () => {
                         </div>
                       </div>
                       
-                      {/* Improved Acceptance Toggle */}
                       <div className="flex flex-col items-center gap-3 min-w-fit">
                         <div className={`px-4 py-2 rounded-full text-xs font-medium border transition-all duration-200 ${
                           student.accepted ? theme.accepted : theme.rejected
@@ -652,6 +785,14 @@ const Index = () => {
                           <span className={`${theme.text} ${isRTL ? 'mr-2' : 'ml-2'}`}>{format(student.courseDate, "PPP")}</span>
                         </p>
                       </div>
+                      {student.notes && (
+                        <div className={`bg-gradient-to-r ${theme.cardBg} p-3 rounded-lg`}>
+                          <p className={theme.textSecondary}>
+                            <span className={`${theme.accent} font-medium`}>{t.notes}:</span>
+                            <span className={`${theme.text} ${isRTL ? 'mr-2' : 'ml-2'}`}>{student.notes}</span>
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -798,6 +939,17 @@ const Index = () => {
                       {format(selectedStudent.courseDate, "PPPP")}
                     </p>
                   </div>
+
+                  {selectedStudent.notes && (
+                    <div className={`bg-gradient-to-r ${theme.cardBg} p-6 rounded-xl shadow-lg`}>
+                      <p className={`${theme.accent} text-sm font-medium mb-2 ${isRTL ? 'font-arabic' : ''}`}>
+                        {t.notes}
+                      </p>
+                      <p className={`${theme.text} text-lg font-semibold`}>
+                        {selectedStudent.notes}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
