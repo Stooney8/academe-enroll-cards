@@ -569,8 +569,8 @@ const Index = () => {
                   className={`bg-gradient-to-br ${theme.cardBg} ${theme.cardBorder} backdrop-blur-sm hover:scale-105 transition-all duration-300 border`}
                 >
                   <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center flex-1">
                         <div className={`bg-gradient-to-br ${theme.cardBg} p-3 rounded-full ${isRTL ? 'ml-4' : 'mr-4'} shadow-lg`}>
                           <IconComponent className={`w-8 h-8 ${theme.text}`} />
                         </div>
@@ -590,27 +590,34 @@ const Index = () => {
                         </div>
                       </div>
                       
-                      {/* Acceptance Toggle - Fixed for RTL */}
-                      <div className="flex flex-col items-center gap-2">
-                        <div className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                      {/* Improved Acceptance Toggle */}
+                      <div className="flex flex-col items-center gap-3 min-w-fit">
+                        <div className={`px-4 py-2 rounded-full text-xs font-medium border transition-all duration-200 ${
                           student.accepted ? theme.accepted : theme.rejected
                         }`}>
-                          {student.accepted ? (
-                            <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                              <Check className="w-3 h-3" />
-                              <span>{language === 'ar' ? 'مقبول' : 'Accepted'}</span>
-                            </div>
-                          ) : (
-                            <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                              <X className="w-3 h-3" />
-                              <span>{language === 'ar' ? 'مرفوض' : 'Rejected'}</span>
-                            </div>
-                          )}
+                          <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            {student.accepted ? (
+                              <>
+                                <Check className="w-3 h-3" />
+                                <span>{language === 'ar' ? 'مقبول' : 'Accepted'}</span>
+                              </>
+                            ) : (
+                              <>
+                                <X className="w-3 h-3" />
+                                <span>{language === 'ar' ? 'مرفوض' : 'Rejected'}</span>
+                              </>
+                            )}
+                          </div>
                         </div>
-                        <Switch
-                          checked={student.accepted}
-                          onCheckedChange={() => toggleStudentAcceptance(student.id)}
-                        />
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={student.accepted}
+                            onCheckedChange={() => toggleStudentAcceptance(student.id)}
+                          />
+                          <span className={`text-xs ${theme.textSecondary} ${isRTL ? 'font-arabic' : ''}`}>
+                            {language === 'ar' ? 'تبديل الحالة' : 'Toggle'}
+                          </span>
+                        </div>
                       </div>
                     </div>
                     
