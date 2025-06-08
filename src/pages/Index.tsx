@@ -120,12 +120,19 @@ const Index: React.FC = () => {
       const studentsWithIcons = data.map(student => {
         const icon = LUCIDE_ICONS.find(icon => icon.name === student.icon_type) || LUCIDE_ICONS[0];
         return {
-          ...student,
-          iconType: student.icon_type,
-          courseDate: student.course_date,
-          idNumber: student.id_number,
+          id: student.id,
           createdAt: student.created_at,
           updatedAt: student.updated_at,
+          name: student.name,
+          age: student.age,
+          email: student.email,
+          mobile: student.mobile,
+          idNumber: student.id_number,
+          courseName: student.course_name,
+          courseDate: student.course_date,
+          accepted: student.accepted,
+          notes: student.notes,
+          iconType: student.icon_type,
           icon: {
             name: icon.name,
             component: icon.component,
