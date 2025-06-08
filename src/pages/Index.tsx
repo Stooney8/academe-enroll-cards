@@ -610,7 +610,6 @@ const Index = () => {
                         <Switch
                           checked={student.accepted}
                           onCheckedChange={() => toggleStudentAcceptance(student.id)}
-                          size="sm"
                         />
                       </div>
                     </div>
