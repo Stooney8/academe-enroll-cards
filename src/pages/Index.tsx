@@ -593,7 +593,10 @@ const Index = () => {
                       {/* Header Row */}
                       <div className="flex flex-col gap-2">
                         <div className="flex items-start justify-between gap-2">
-                          <h3 className="text-base sm:text-lg font-semibold text-primary leading-tight">
+                          <h3 
+                            className="text-base sm:text-lg font-semibold text-primary leading-tight cursor-pointer hover:underline"
+                            onClick={() => navigate(`/student/${student.id}`)}
+                          >
                             {student.name}
                           </h3>
                           <div className="flex items-center gap-1 flex-shrink-0">
