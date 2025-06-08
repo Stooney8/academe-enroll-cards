@@ -140,6 +140,25 @@ const Index = () => {
       return;
     }
 
+    // Validate ID number and mobile number length
+    if (formData.id_number.length !== 10) {
+      toast({
+        title: "Validation Error",
+        description: "ID number must be exactly 10 digits",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (formData.mobile.length !== 10) {
+      toast({
+        title: "Validation Error",
+        description: "Mobile number must be exactly 10 digits",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       if (editingStudent) {
         // Update existing student
@@ -383,13 +402,17 @@ const Index = () => {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="id_number">ID Number</Label>
+                          <Label htmlFor="id_number">ID Number (10 digits)</Label>
                           <Input
                             id="id_number"
                             value={formData.id_number}
-                            onChange={(e) =>
-                              setFormData({ ...formData, id_number: e.target.value })
-                            }
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                              setFormData({ ...formData, id_number: value });
+                            }}
+                            maxLength={10}
+                            pattern="[0-9]{10}"
+                            placeholder="Enter 10 digits"
                             required
                             className="bg-background/50 border-primary/30"
                           />
@@ -410,13 +433,17 @@ const Index = () => {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="mobile">Mobile</Label>
+                          <Label htmlFor="mobile">Mobile (10 digits)</Label>
                           <Input
                             id="mobile"
                             value={formData.mobile}
-                            onChange={(e) =>
-                              setFormData({ ...formData, mobile: e.target.value })
-                            }
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                              setFormData({ ...formData, mobile: value });
+                            }}
+                            maxLength={10}
+                            pattern="[0-9]{10}"
+                            placeholder="Enter 10 digits"
                             required
                             className="bg-background/50 border-primary/30"
                           />
