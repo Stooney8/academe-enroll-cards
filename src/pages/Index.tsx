@@ -109,7 +109,7 @@ const Index = () => {
   const [currentPage, setCurrentPage] = useState<'home' | 'list' | 'detail'>('home');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
-  const [language, setLanguage] = useState<'ar' | 'en'>('ar');
+  const [language, setLanguage] = useState<'ar' | 'en'>('en'); // Changed default to English
   const [currentTheme, setCurrentTheme] = useState<Theme>('dark');
   
   const [formData, setFormData] = useState({
@@ -571,7 +571,7 @@ const Index = () => {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center">
-                        <div className={`bg-gradient-to-br ${theme.cardBg} p-3 rounded-full mr-4 shadow-lg`}>
+                        <div className={`bg-gradient-to-br ${theme.cardBg} p-3 rounded-full ${isRTL ? 'ml-4' : 'mr-4'} shadow-lg`}>
                           <IconComponent className={`w-8 h-8 ${theme.text}`} />
                         </div>
                         <div className="flex-1">
@@ -590,20 +590,20 @@ const Index = () => {
                         </div>
                       </div>
                       
-                      {/* Acceptance Toggle */}
+                      {/* Acceptance Toggle - Fixed for RTL */}
                       <div className="flex flex-col items-center gap-2">
                         <div className={`px-3 py-1 rounded-full text-xs font-medium border ${
                           student.accepted ? theme.accepted : theme.rejected
                         }`}>
                           {student.accepted ? (
-                            <div className="flex items-center gap-1">
+                            <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                               <Check className="w-3 h-3" />
-                              {language === 'ar' ? 'مقبول' : 'Accepted'}
+                              <span>{language === 'ar' ? 'مقبول' : 'Accepted'}</span>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-1">
+                            <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                               <X className="w-3 h-3" />
-                              {language === 'ar' ? 'مرفوض' : 'Rejected'}
+                              <span>{language === 'ar' ? 'مرفوض' : 'Rejected'}</span>
                             </div>
                           )}
                         </div>
@@ -618,19 +618,19 @@ const Index = () => {
                       <div className={`bg-gradient-to-r ${theme.cardBg} p-3 rounded-lg`}>
                         <p className={theme.textSecondary}>
                           <span className={`${theme.accent} font-medium`}>{t.mobile}:</span>
-                          <span className={`${theme.text} ml-2`}>{student.mobile}</span>
+                          <span className={`${theme.text} ${isRTL ? 'mr-2' : 'ml-2'}`}>{student.mobile}</span>
                         </p>
                       </div>
                       <div className={`bg-gradient-to-r ${theme.cardBg} p-3 rounded-lg`}>
                         <p className={theme.textSecondary}>
                           <span className={`${theme.accent} font-medium`}>{t.age}:</span>
-                          <span className={`${theme.text} ml-2`}>{student.age}</span>
+                          <span className={`${theme.text} ${isRTL ? 'mr-2' : 'ml-2'}`}>{student.age}</span>
                         </p>
                       </div>
                       <div className={`bg-gradient-to-r ${theme.cardBg} p-3 rounded-lg`}>
                         <p className={theme.textSecondary}>
                           <span className={`${theme.accent} font-medium`}>{t.courseDate}:</span>
-                          <span className={`${theme.text} ml-2`}>{format(student.courseDate, "PPP")}</span>
+                          <span className={`${theme.text} ${isRTL ? 'mr-2' : 'ml-2'}`}>{format(student.courseDate, "PPP")}</span>
                         </p>
                       </div>
                     </div>
