@@ -52,6 +52,16 @@ const Index = () => {
 
   console.log("Current auth state:", { user, userProfile, isAdmin, isTeacher });
 
+  // Format date to show month as text
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
   // Toggle notes visibility for a specific student
   const toggleNotes = (studentId: string) => {
     setExpandedNotes(prev => {
@@ -572,8 +582,8 @@ const Index = () => {
                           <p><span className="font-medium">Email:</span> {student.email}</p>
                           <p><span className="font-medium">Mobile:</span> {student.mobile}</p>
                           <p><span className="font-medium">Age:</span> {student.age}</p>
-                          <p><span className="font-medium">Course Date:</span> {new Date(student.course_date).toLocaleDateString()}</p>
-                          <p><span className="font-medium">Added:</span> {new Date(student.created_at).toLocaleDateString()}</p>
+                          <p><span className="font-medium">Course Date:</span> {formatDate(student.course_date)}</p>
+                          <p><span className="font-medium">Added:</span> {formatDate(student.created_at)}</p>
                         </div>
                         
                         {/* Notes Section */}
