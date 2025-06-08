@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, CalendarIcon, ArrowRight, ArrowLeft, User, Users, UserPlus, UserRound, Mail, Phone, BookOpen, IdCard, Palette, Check, X, FileText, Eye, EyeOff } from 'lucide-react';
+import { Calendar, CalendarIcon, ArrowRight, ArrowLeft, User, Users, UserPlus, UserRound, Mail, Phone, BookOpen, IdCard, Palette, Check, X, FileText, Eye, EyeOff, Edit, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -113,7 +113,7 @@ const themes = {
 const Index: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [currentPage, setCurrentPage] = useState<'home' | 'list' | 'detail'>('home');
+  const [currentPage, setCurrentPage] = useState<'home' | 'list' | 'detail' | 'edit'>('home');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [language, setLanguage] = useState<'ar' | 'en'>('en');
@@ -123,6 +123,18 @@ const Index: React.FC = () => {
   const [visibleDetailNotes, setVisibleDetailNotes] = useState(false);
   
   const [formData, setFormData] = useState({
+    name: '',
+    idNumber: '',
+    mobile: '',
+    email: '',
+    courseName: '',
+    courseDate: null as Date | null,
+    age: '',
+    accepted: false,
+    notes: ''
+  });
+  
+  const [editFormData, setEditFormData] = useState({
     name: '',
     idNumber: '',
     mobile: '',
@@ -278,6 +290,30 @@ const Index: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const validateEditForm = () => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!editFormData.name.trim()) newErrors.name = t.required;
+    if (!editFormData.idNumber.trim()) newErrors.idNumber = t.required;
+    else if (editFormData.idNumber.length !== 10 || !/^\d+$/.test(editFormData.idNumber)) {
+      newErrors.idNumber = t.invalidId;
+    }
+    if (!editFormData.mobile.trim()) newErrors.mobile = t.required;
+    else if (editFormData.mobile.length !== 10 || !/^\d+$/.test(editFormData.mobile)) {
+      newErrors.mobile = t.invalidMobile;
+    }
+    if (!editFormData.email.trim()) newErrors.email = t.required;
+    else if (!/\S+@\S+\.\S+/.test(editFormData.email)) {
+      newErrors.email = t.invalidEmail;
+    }
+    if (!editFormData.courseName.trim()) newErrors.courseName = t.required;
+    if (!editFormData.courseDate) newErrors.courseDate = t.required;
+    if (!editFormData.age.trim()) newErrors.age = t.required;
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -364,6 +400,136 @@ const Index: React.FC = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const handleEditInputChange = (field: string, value: string) => {
+    if ((field === 'idNumber' || field === 'mobile') && value.length > 10) {
+      return;
+    }
+    if ((field === 'idNumber' || field === 'mobile') && !/^\d*$/.test(value)) {
+      return;
+    }
+    
+    setEditFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const handleDeleteStudent = async (studentId: string) => {
+    if (!confirm(language === 'ar' ? 'هل أنت متأكد من حذف هذا الطالب؟' : 'Are you sure you want to delete this student?')) {
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const { error } = await supabase
+        .from('students')
+        .delete()
+        .eq('id', studentId);
+
+      if (error) throw error;
+
+      setStudents(students.filter(student => student.id !== studentId));
+      
+      if (selectedStudent?.id === studentId) {
+        setCurrentPage('list');
+        setSelectedStudent(null);
+      }
+
+      toast({
+        title: language === 'ar' ? 'تم الحذف بنجاح' : 'Deleted successfully',
+        description: language === 'ar' ? 'تم حذف الطالب بنجاح' : 'Student has been deleted successfully',
+      });
+    } catch (error: any) {
+      console.error('Error deleting student:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete student",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEditStudent = (student: Student) => {
+    setEditFormData({
+      name: student.name,
+      idNumber: student.idNumber,
+      mobile: student.mobile,
+      email: student.email,
+      courseName: student.courseName,
+      courseDate: student.courseDate,
+      age: student.age,
+      accepted: student.accepted,
+      notes: student.notes || ''
+    });
+    setSelectedStudent(student);
+    setCurrentPage('edit');
+  };
+
+  const handleUpdateStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateEditForm() || !selectedStudent) return;
+
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('students')
+        .update({
+          name: editFormData.name,
+          id_number: editFormData.idNumber,
+          mobile: editFormData.mobile,
+          email: editFormData.email,
+          course_name: editFormData.courseName,
+          course_date: editFormData.courseDate!.toISOString().split('T')[0],
+          age: editFormData.age,
+          accepted: editFormData.accepted,
+          notes: editFormData.notes,
+        })
+        .eq('id', selectedStudent.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const updatedStudent: Student = {
+        id: data.id,
+        name: data.name,
+        idNumber: data.id_number,
+        mobile: data.mobile,
+        email: data.email,
+        courseName: data.course_name,
+        courseDate: new Date(data.course_date),
+        age: data.age,
+        accepted: data.accepted,
+        notes: data.notes || '',
+        icon: selectedStudent.icon
+      };
+      
+      setStudents(students.map(student => 
+        student.id === selectedStudent.id ? updatedStudent : student
+      ));
+      setSelectedStudent(updatedStudent);
+      setErrors({});
+      
+      toast({
+        title: language === 'ar' ? 'تم التحديث بنجاح' : 'Updated successfully',
+        description: language === 'ar' ? 'تم تحديث بيانات الطالب بنجاح' : 'Student information has been updated successfully',
+      });
+
+      setCurrentPage('detail');
+    } catch (error: any) {
+      console.error('Error updating student:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update student",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -790,6 +956,26 @@ const Index: React.FC = () => {
                             {language === 'ar' ? 'تبديل الحالة' : 'Toggle'}
                           </span>
                         </div>
+                        
+                        {/* Action Buttons */}
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditStudent(student)}
+                            className={`h-8 w-8 p-0 ${theme.button}`}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteStudent(student.id)}
+                            className={`h-8 w-8 p-0 ${theme.button} hover:text-red-400`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                     
@@ -871,6 +1057,22 @@ const Index: React.FC = () => {
             </h1>
             
             <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => handleEditStudent(selectedStudent)}
+                className={`${theme.button} gap-2`}
+              >
+                <Edit className="w-4 h-4" />
+                {language === 'ar' ? 'تعديل' : 'Edit'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleDeleteStudent(selectedStudent.id)}
+                className={`${theme.button} gap-2 hover:text-red-400`}
+              >
+                <Trash2 className="w-4 h-4" />
+                {language === 'ar' ? 'حذف' : 'Delete'}
+              </Button>
               <ThemeSelector />
               <Button
                 variant="outline"
@@ -1018,12 +1220,234 @@ const Index: React.FC = () => {
     );
   };
 
+  const renderEditStudent = () => {
+    if (!selectedStudent) return null;
+    
+    return (
+      <div className={`min-h-screen bg-gradient-to-br ${theme.gradient} p-4`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <Button
+              onClick={() => setCurrentPage('detail')}
+              variant="outline"
+              className={theme.button}
+            >
+              {isRTL ? <ArrowRight className="w-4 h-4 mr-2" /> : <ArrowLeft className="w-4 h-4 mr-2" />}
+              {t.back}
+            </Button>
+            
+            <h1 className={`text-3xl font-bold ${theme.text} ${isRTL ? 'font-arabic' : ''}`}>
+              {language === 'ar' ? 'تعديل بيانات الطالب' : 'Edit Student'}
+            </h1>
+            
+            <div className="flex gap-2">
+              <ThemeSelector />
+              <Button
+                variant="outline"
+                onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
+                className={theme.button}
+              >
+                {language === 'ar' ? 'English' : 'العربية'}
+              </Button>
+            </div>
+          </div>
+
+          {/* Edit Form */}
+          <Card className={`bg-gradient-to-br ${theme.cardBg} ${theme.cardBorder} backdrop-blur-sm border`}>
+            <CardHeader>
+              <CardTitle className={`text-2xl ${theme.text} text-center ${isRTL ? 'font-arabic' : ''}`}>
+                {language === 'ar' ? 'تعديل بيانات الطالب' : 'Edit Student Information'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleUpdateStudent} className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* Name */}
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-name" className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
+                      {t.name}
+                    </Label>
+                    <Input
+                      id="edit-name"
+                      value={editFormData.name}
+                      onChange={(e) => handleEditInputChange('name', e.target.value)}
+                      className={theme.input}
+                    />
+                    {errors.name && <p className="text-red-400 text-sm">{errors.name}</p>}
+                  </div>
+
+                  {/* ID Number */}
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-idNumber" className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
+                      {t.idNumber}
+                    </Label>
+                    <Input
+                      id="edit-idNumber"
+                      value={editFormData.idNumber}
+                      onChange={(e) => handleEditInputChange('idNumber', e.target.value)}
+                      maxLength={10}
+                      className={theme.input}
+                    />
+                    {errors.idNumber && <p className="text-red-400 text-sm">{errors.idNumber}</p>}
+                  </div>
+
+                  {/* Mobile */}
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-mobile" className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
+                      {t.mobile}
+                    </Label>
+                    <Input
+                      id="edit-mobile"
+                      value={editFormData.mobile}
+                      onChange={(e) => handleEditInputChange('mobile', e.target.value)}
+                      maxLength={10}
+                      className={theme.input}
+                    />
+                    {errors.mobile && <p className="text-red-400 text-sm">{errors.mobile}</p>}
+                  </div>
+
+                  {/* Email */}
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-email" className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
+                      {t.email}
+                    </Label>
+                    <Input
+                      id="edit-email"
+                      type="email"
+                      value={editFormData.email}
+                      onChange={(e) => handleEditInputChange('email', e.target.value)}
+                      className={theme.input}
+                    />
+                    {errors.email && <p className="text-red-400 text-sm">{errors.email}</p>}
+                  </div>
+
+                  {/* Course Name */}
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-courseName" className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
+                      {t.courseName}
+                    </Label>
+                    <Input
+                      id="edit-courseName"
+                      value={editFormData.courseName}
+                      onChange={(e) => handleEditInputChange('courseName', e.target.value)}
+                      className={theme.input}
+                    />
+                    {errors.courseName && <p className="text-red-400 text-sm">{errors.courseName}</p>}
+                  </div>
+
+                  {/* Age */}
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-age" className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
+                      {t.age}
+                    </Label>
+                    <Input
+                      id="edit-age"
+                      value={editFormData.age}
+                      onChange={(e) => handleEditInputChange('age', e.target.value)}
+                      className={theme.input}
+                    />
+                    {errors.age && <p className="text-red-400 text-sm">{errors.age}</p>}
+                  </div>
+                </div>
+
+                {/* Course Date */}
+                <div className="space-y-2">
+                  <Label className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
+                    {t.courseDate}
+                  </Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          `w-full justify-start text-left font-normal ${theme.input}`,
+                          !editFormData.courseDate && theme.textMuted
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {editFormData.courseDate ? format(editFormData.courseDate, "PPP") : t.selectDate}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={editFormData.courseDate || undefined}
+                        onSelect={(date) => setEditFormData(prev => ({ ...prev, courseDate: date || null }))}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {errors.courseDate && <p className="text-red-400 text-sm">{errors.courseDate}</p>}
+                </div>
+
+                {/* Notes */}
+                <div className="space-y-2">
+                  <Label htmlFor="edit-notes" className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
+                    {t.notes}
+                  </Label>
+                  <Textarea
+                    id="edit-notes"
+                    value={editFormData.notes}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, notes: e.target.value }))}
+                    placeholder={language === 'ar' ? 'أدخل ملاحظات حول الطالب...' : 'Enter notes about the student...'}
+                    className={`${theme.input} resize-none`}
+                    rows={3}
+                  />
+                </div>
+
+                {/* Acceptance Status */}
+                <div className="space-y-2">
+                  <Label className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
+                    {t.accepted}
+                  </Label>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="edit-accepted"
+                      checked={editFormData.accepted}
+                      onCheckedChange={(checked) => setEditFormData(prev => ({ ...prev, accepted: checked }))}
+                    />
+                    <Label htmlFor="edit-accepted" className={`${theme.textSecondary} text-sm`}>
+                      {editFormData.accepted ? (language === 'ar' ? 'مقبول' : 'Accepted') : (language === 'ar' ? 'لم يتم بعد' : 'Not yet')}
+                    </Label>
+                  </div>
+                </div>
+
+                {/* Submit Buttons */}
+                <div className="flex gap-4">
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className={`flex-1 bg-gradient-to-r ${theme.buttonPrimary} text-white font-semibold py-3 text-lg`}
+                  >
+                    {isLoading ? t.loading : (language === 'ar' ? 'تحديث' : 'Update')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setCurrentPage('detail')}
+                    className={`flex-1 ${theme.button}`}
+                  >
+                    {language === 'ar' ? 'إلغاء' : 'Cancel'}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  };
+
   // Render current page
   switch (currentPage) {
     case 'list':
       return renderStudentList();
     case 'detail':
       return renderStudentDetail();
+    case 'edit':
+      return renderEditStudent();
     default:
       return renderHomePage();
   }
