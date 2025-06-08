@@ -7,45 +7,45 @@
 
 @layer base {
   :root {
-    /* Light theme colors */
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    /* Light theme colors - Modern and refined */
+    --background: 210 40% 98%;
+    --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 222.2 84% 4.9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 142.1 76.2% 36.3%;
-    --primary-foreground: 355.7 100% 97.3%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
 
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --accent: 210 40% 94%;
+    --accent-foreground: 222.2 84% 4.9%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 142.1 76.2% 36.3%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 142.1 76.2% 36.3%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 240 5.9% 90%;
-    --sidebar-ring: 142.1 76.2% 36.3%;
+    --sidebar-background: 210 40% 98%;
+    --sidebar-foreground: 222.2 84% 4.9%;
+    --sidebar-primary: 221.2 83.2% 53.3%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 210 40% 96%;
+    --sidebar-accent-foreground: 222.2 84% 4.9%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-ring: 221.2 83.2% 53.3%;
   }
 
   .dark {
@@ -98,9 +98,14 @@
   }
 }
 
-/* Custom gradient backgrounds */
+/* Light theme specific gradients and styles */
 .gradient-bg {
-  background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(240 5% 6%) 100%);
+  background: linear-gradient(135deg, 
+    hsl(210 40% 98%) 0%, 
+    hsl(220 60% 97%) 25%,
+    hsl(210 100% 95%) 50%,
+    hsl(220 40% 96%) 100%
+  );
 }
 
 .dark .gradient-bg {
@@ -108,12 +113,64 @@
 }
 
 .card-gradient {
-  background: linear-gradient(145deg, hsl(var(--card)) 0%, hsl(240 6% 10%) 100%);
-  border: 1px solid hsl(var(--border));
+  background: linear-gradient(145deg, 
+    hsl(0 0% 100%) 0%, 
+    hsl(210 40% 98%) 50%,
+    hsl(220 60% 97%) 100%
+  );
+  border: 1px solid hsl(214.3 31.8% 91.4%);
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
 }
 
 .dark .card-gradient {
   background: linear-gradient(145deg, hsl(var(--card)) 0%, hsl(240 6% 10%) 100%);
+  border: 1px solid hsl(var(--border));
+  box-shadow: none;
+}
+
+/* Enhanced light theme card styles */
+:root .card-enhanced {
+  background: linear-gradient(145deg, 
+    hsl(0 0% 100%) 0%, 
+    hsl(210 40% 99%) 100%
+  );
+  border: 1px solid hsl(214.3 31.8% 88%);
+  box-shadow: 
+    0 4px 6px -1px rgb(0 0 0 / 0.1), 
+    0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.dark .card-enhanced {
+  background: linear-gradient(145deg, hsl(var(--card)) 0%, hsl(240 6% 10%) 100%);
+  border: 1px solid hsl(var(--border));
+  box-shadow: none;
+}
+
+/* Light theme button enhancements */
+:root .btn-light-enhanced {
+  background: linear-gradient(135deg, 
+    hsl(221.2 83.2% 53.3%) 0%, 
+    hsl(221.2 83.2% 48%) 100%
+  );
+  box-shadow: 0 2px 4px 0 rgb(0 0 0 / 0.1);
+}
+
+:root .btn-light-enhanced:hover {
+  background: linear-gradient(135deg, 
+    hsl(221.2 83.2% 48%) 0%, 
+    hsl(221.2 83.2% 43%) 100%
+  );
+  box-shadow: 0 4px 8px 0 rgb(0 0 0 / 0.15);
+}
+
+.dark .btn-light-enhanced {
+  background: hsl(var(--primary));
+  box-shadow: none;
+}
+
+.dark .btn-light-enhanced:hover {
+  background: hsl(var(--primary) / 0.9);
+  box-shadow: none;
 }
 
 /* Custom animations */
@@ -132,20 +189,38 @@
   animation: fadeInUp 0.5s ease-out;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
+/* Custom scrollbar for light theme */
+:root::-webkit-scrollbar {
   width: 8px;
 }
 
-::-webkit-scrollbar-track {
+:root::-webkit-scrollbar-track {
+  background: hsl(210 40% 96%);
+}
+
+:root::-webkit-scrollbar-thumb {
+  background: hsl(221.2 83.2% 53.3%);
+  border-radius: 4px;
+}
+
+:root::-webkit-scrollbar-thumb:hover {
+  background: hsl(221.2 83.2% 48%);
+}
+
+/* Dark theme scrollbar */
+.dark::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dark::-webkit-scrollbar-track {
   background: hsl(var(--muted));
 }
 
-::-webkit-scrollbar-thumb {
+.dark::-webkit-scrollbar-thumb {
   background: hsl(var(--primary));
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
+.dark::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--primary) / 0.8);
 }
