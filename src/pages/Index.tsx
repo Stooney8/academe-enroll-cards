@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Edit3, Plus, Users, GraduationCap, UserCheck, Search } from "lucide-react";
+import { Trash2, Edit3, Plus, Users, GraduationCap, UserCheck, Search, Eye, EyeOff, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -36,6 +35,7 @@ const Index = () => {
   const [courseFilter, setCourseFilter] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState({
     name: "",
     id_number: "",
@@ -51,6 +51,19 @@ const Index = () => {
   const { user, userProfile, isAdmin, isTeacher } = useAuth();
 
   console.log("Current auth state:", { user, userProfile, isAdmin, isTeacher });
+
+  // Toggle notes visibility for a specific student
+  const toggleNotes = (studentId: string) => {
+    setExpandedNotes(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(studentId)) {
+        newSet.delete(studentId);
+      } else {
+        newSet.add(studentId);
+      }
+      return newSet;
+    });
+  };
 
   // Fetch students
   const fetchStudents = async () => {
@@ -499,7 +512,7 @@ const Index = () => {
                 <Card key={student.id} className="card-gradient border-primary/20 hover:border-primary/50 transition-all duration-200">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
-                      <div className="space-y-2">
+                      <div className="space-y-2 flex-1">
                         <div className="flex items-center gap-3">
                           <h3 className="text-lg font-semibold text-primary">
                             {student.name}
@@ -512,6 +525,20 @@ const Index = () => {
                               Accepted
                             </Badge>
                           )}
+                          {student.notes && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toggleNotes(student.id)}
+                              className="text-muted-foreground hover:text-primary"
+                            >
+                              {expandedNotes.has(student.id) ? (
+                                <EyeOff className="h-4 w-4" />
+                              ) : (
+                                <Eye className="h-4 w-4" />
+                              )}
+                            </Button>
+                          )}
                         </div>
                         <div className="text-sm text-muted-foreground space-y-1">
                           <p><span className="font-medium">ID:</span> {student.id_number}</p>
@@ -519,12 +546,23 @@ const Index = () => {
                           <p><span className="font-medium">Mobile:</span> {student.mobile}</p>
                           <p><span className="font-medium">Age:</span> {student.age}</p>
                           <p><span className="font-medium">Course Date:</span> {new Date(student.course_date).toLocaleDateString()}</p>
-                          {student.notes && (
-                            <p><span className="font-medium">Notes:</span> {student.notes}</p>
-                          )}
                           <p><span className="font-medium">Added:</span> {new Date(student.created_at).toLocaleDateString()}</p>
                         </div>
+                        
+                        {/* Notes Section */}
+                        {student.notes && expandedNotes.has(student.id) && (
+                          <div className="mt-4 p-4 bg-muted/30 rounded-lg border border-primary/20">
+                            <div className="flex items-center gap-2 mb-2">
+                              <FileText className="h-4 w-4 text-primary" />
+                              <span className="font-medium text-primary">Notes</span>
+                            </div>
+                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                              {student.notes}
+                            </p>
+                          </div>
+                        )}
                       </div>
+                      
                       {isAdmin && (
                         <div className="flex gap-2">
                           <Button
