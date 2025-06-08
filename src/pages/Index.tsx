@@ -318,29 +318,29 @@ const Index = () => {
 
   return (
     <div className="min-h-screen gradient-bg">
-      <div className="container mx-auto p-6 space-y-8">
+      <div className="container mx-auto p-4 sm:p-6 space-y-6 sm:space-y-8">
         {/* Header */}
         <div className="text-center space-y-4 animate-fade-in-up">
-          <div className="flex items-center justify-center gap-3">
-            <GraduationCap className="h-12 w-12 text-primary" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent">
+          <div className="flex items-center justify-center gap-2 sm:gap-3">
+            <GraduationCap className="h-8 w-8 sm:h-12 sm:w-12 text-primary" />
+            <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent">
               Student Management System
             </h1>
           </div>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-sm sm:text-lg max-w-2xl mx-auto px-4">
             Manage your students efficiently with our comprehensive dashboard
           </p>
           
           {/* User Info */}
           {userProfile && (
-            <div className="flex items-center justify-center gap-4 mt-6">
-              <Badge variant="secondary" className="px-4 py-2">
-                <UserCheck className="h-4 w-4 mr-2" />
+            <div className="flex items-center justify-center gap-2 sm:gap-4 mt-6 flex-wrap">
+              <Badge variant="secondary" className="px-3 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm">
+                <UserCheck className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 {userProfile.first_name} {userProfile.last_name}
               </Badge>
               <Badge 
                 variant={isAdmin ? "default" : "outline"} 
-                className="px-4 py-2"
+                className="px-3 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm"
               >
                 {userProfile.role.toUpperCase()}
               </Badge>
@@ -349,7 +349,7 @@ const Index = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in-up">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 animate-fade-in-up">
           <Card className="card-gradient border-primary/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Students</CardTitle>
@@ -386,13 +386,13 @@ const Index = () => {
         {/* Search and Filter Controls */}
         <Card className="card-gradient border-primary/20 animate-fade-in-up">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Search className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+              <Search className="h-4 w-4 sm:h-5 sm:w-5" />
               Search & Filter
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col gap-4">
               <div className="flex-1">
                 <Input
                   placeholder="Search by name, ID, email, or mobile..."
@@ -401,166 +401,168 @@ const Index = () => {
                   className="bg-background/50 border-primary/30"
                 />
               </div>
-              <Select value={courseFilter} onValueChange={setCourseFilter}>
-                <SelectTrigger className="w-full sm:w-48 bg-background/50 border-primary/30">
-                  <SelectValue placeholder="Filter by course" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Courses</SelectItem>
-                  {uniqueCourses.map((course) => (
-                    <SelectItem key={course} value={course}>
-                      {course}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {isAdmin && (
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button onClick={resetForm} className="whitespace-nowrap">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Student
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="card-gradient border-primary/30 max-w-2xl">
-                    <DialogHeader>
-                      <DialogTitle>
-                        {editingStudent ? "Edit Student" : "Add New Student"}
-                      </DialogTitle>
-                      <DialogDescription>
-                        {editingStudent
-                          ? "Update the student information below."
-                          : "Fill in the student details below to add them to the system."}
-                      </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Select value={courseFilter} onValueChange={setCourseFilter}>
+                  <SelectTrigger className="w-full sm:w-48 bg-background/50 border-primary/30">
+                    <SelectValue placeholder="Filter by course" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Courses</SelectItem>
+                    {uniqueCourses.map((course) => (
+                      <SelectItem key={course} value={course}>
+                        {course}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {isAdmin && (
+                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button onClick={resetForm} className="w-full sm:w-auto">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Student
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="card-gradient border-primary/30 max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>
+                          {editingStudent ? "Edit Student" : "Add New Student"}
+                        </DialogTitle>
+                        <DialogDescription>
+                          {editingStudent
+                            ? "Update the student information below."
+                            : "Fill in the student details below to add them to the system."}
+                        </DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="name">Full Name</Label>
+                            <Input
+                              id="name"
+                              value={formData.name}
+                              onChange={(e) =>
+                                setFormData({ ...formData, name: e.target.value })
+                              }
+                              required
+                              className="bg-background/50 border-primary/30"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="id_number">ID Number (10 digits)</Label>
+                            <Input
+                              id="id_number"
+                              value={formData.id_number}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                setFormData({ ...formData, id_number: value });
+                              }}
+                              maxLength={10}
+                              pattern="[0-9]{10}"
+                              placeholder="Enter 10 digits"
+                              required
+                              className="bg-background/50 border-primary/30"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              value={formData.email}
+                              onChange={(e) =>
+                                setFormData({ ...formData, email: e.target.value })
+                              }
+                              required
+                              className="bg-background/50 border-primary/30"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="mobile">Mobile (10 digits)</Label>
+                            <Input
+                              id="mobile"
+                              value={formData.mobile}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                setFormData({ ...formData, mobile: value });
+                              }}
+                              maxLength={10}
+                              pattern="[0-9]{10}"
+                              placeholder="Enter 10 digits"
+                              required
+                              className="bg-background/50 border-primary/30"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="age">Age</Label>
+                            <Input
+                              id="age"
+                              value={formData.age}
+                              onChange={(e) =>
+                                setFormData({ ...formData, age: e.target.value })
+                              }
+                              required
+                              className="bg-background/50 border-primary/30"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="course_name">Course Name</Label>
+                            <Input
+                              id="course_name"
+                              value={formData.course_name}
+                              onChange={(e) =>
+                                setFormData({ ...formData, course_name: e.target.value })
+                              }
+                              required
+                              className="bg-background/50 border-primary/30"
+                            />
+                          </div>
+                        </div>
                         <div className="space-y-2">
-                          <Label htmlFor="name">Full Name</Label>
+                          <Label htmlFor="course_date">Course Date</Label>
                           <Input
-                            id="name"
-                            value={formData.name}
+                            id="course_date"
+                            type="date"
+                            value={formData.course_date}
                             onChange={(e) =>
-                              setFormData({ ...formData, name: e.target.value })
+                              setFormData({ ...formData, course_date: e.target.value })
                             }
                             required
                             className="bg-background/50 border-primary/30"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="id_number">ID Number (10 digits)</Label>
+                          <Label htmlFor="notes">Notes (Optional)</Label>
                           <Input
-                            id="id_number"
-                            value={formData.id_number}
-                            onChange={(e) => {
-                              const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-                              setFormData({ ...formData, id_number: value });
-                            }}
-                            maxLength={10}
-                            pattern="[0-9]{10}"
-                            placeholder="Enter 10 digits"
-                            required
-                            className="bg-background/50 border-primary/30"
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="email">Email</Label>
-                          <Input
-                            id="email"
-                            type="email"
-                            value={formData.email}
+                            id="notes"
+                            value={formData.notes}
                             onChange={(e) =>
-                              setFormData({ ...formData, email: e.target.value })
+                              setFormData({ ...formData, notes: e.target.value })
                             }
-                            required
                             className="bg-background/50 border-primary/30"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="mobile">Mobile (10 digits)</Label>
-                          <Input
-                            id="mobile"
-                            value={formData.mobile}
-                            onChange={(e) => {
-                              const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-                              setFormData({ ...formData, mobile: value });
-                            }}
-                            maxLength={10}
-                            pattern="[0-9]{10}"
-                            placeholder="Enter 10 digits"
-                            required
-                            className="bg-background/50 border-primary/30"
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="age">Age</Label>
-                          <Input
-                            id="age"
-                            value={formData.age}
-                            onChange={(e) =>
-                              setFormData({ ...formData, age: e.target.value })
-                            }
-                            required
-                            className="bg-background/50 border-primary/30"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="course_name">Course Name</Label>
-                          <Input
-                            id="course_name"
-                            value={formData.course_name}
-                            onChange={(e) =>
-                              setFormData({ ...formData, course_name: e.target.value })
-                            }
-                            required
-                            className="bg-background/50 border-primary/30"
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="course_date">Course Date</Label>
-                        <Input
-                          id="course_date"
-                          type="date"
-                          value={formData.course_date}
-                          onChange={(e) =>
-                            setFormData({ ...formData, course_date: e.target.value })
-                          }
-                          required
-                          className="bg-background/50 border-primary/30"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="notes">Notes (Optional)</Label>
-                        <Input
-                          id="notes"
-                          value={formData.notes}
-                          onChange={(e) =>
-                            setFormData({ ...formData, notes: e.target.value })
-                          }
-                          className="bg-background/50 border-primary/30"
-                        />
-                      </div>
-                      <DialogFooter>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setIsDialogOpen(false)}
-                        >
-                          Cancel
-                        </Button>
-                        <Button type="submit">
-                          {editingStudent ? "Update" : "Add"} Student
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </DialogContent>
-                </Dialog>
-              )}
+                        <DialogFooter>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setIsDialogOpen(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button type="submit">
+                            {editingStudent ? "Update" : "Add"} Student
+                          </Button>
+                        </DialogFooter>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -583,91 +585,101 @@ const Index = () => {
             <div className="grid gap-4">
               {filteredStudents.map((student) => (
                 <Card key={student.id} className="card-gradient border-primary/20 hover:border-primary/50 transition-all duration-200">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-2 flex-1">
-                        <div className="flex items-center gap-3">
-                          <h3 className="text-lg font-semibold text-primary">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="space-y-4">
+                      {/* Student Header - Mobile Optimized */}
+                      <div className="flex flex-col gap-3">
+                        <div className="flex flex-wrap items-start gap-2">
+                          <h3 className="text-lg font-semibold text-primary flex-shrink-0">
                             {student.name}
                           </h3>
-                          <Badge variant="outline" className="border-primary/30">
-                            {student.course_name}
-                          </Badge>
-                          
-                          {/* Acceptance Status Badge */}
-                          <div className="flex items-center gap-2">
-                            <Info className="h-4 w-4 text-muted-foreground" />
-                            <Badge 
-                              variant={student.accepted ? "default" : "secondary"}
-                              className={student.accepted ? "bg-green-600 hover:bg-green-700" : "bg-orange-500 hover:bg-orange-600"}
-                            >
-                              {student.accepted ? "Accepted" : "Not Yet Accepted"}
+                          <div className="flex flex-wrap gap-2">
+                            <Badge variant="outline" className="border-primary/30 text-xs">
+                              {student.course_name}
                             </Badge>
-                          </div>
-                          
-                          {student.notes && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleNotes(student.id)}
-                              className="text-muted-foreground hover:text-primary"
-                            >
-                              {expandedNotes.has(student.id) ? (
-                                <EyeOff className="h-4 w-4" />
-                              ) : (
-                                <Eye className="h-4 w-4" />
-                              )}
-                            </Button>
-                          )}
-                        </div>
-                        <div className="text-sm text-muted-foreground space-y-1">
-                          <p><span className="font-medium">ID:</span> {student.id_number}</p>
-                          <p><span className="font-medium">Email:</span> {student.email}</p>
-                          <p><span className="font-medium">Mobile:</span> {student.mobile}</p>
-                          <p><span className="font-medium">Age:</span> {student.age}</p>
-                          <p><span className="font-medium">Course Date:</span> {formatDate(student.course_date)}</p>
-                          <p><span className="font-medium">Added:</span> {formatDate(student.created_at)}</p>
-                        </div>
-                        
-                        {/* Notes Section */}
-                        {student.notes && expandedNotes.has(student.id) && (
-                          <div className="mt-4 p-4 bg-muted/30 rounded-lg border border-primary/20">
-                            <div className="flex items-center gap-2 mb-2">
-                              <FileText className="h-4 w-4 text-primary" />
-                              <span className="font-medium text-primary">Notes</span>
+                            
+                            {/* Acceptance Status Badge */}
+                            <div className="flex items-center gap-1">
+                              <Info className="h-3 w-3 text-muted-foreground" />
+                              <Badge 
+                                variant={student.accepted ? "default" : "secondary"}
+                                className={`text-xs ${student.accepted ? "bg-green-600 hover:bg-green-700" : "bg-orange-500 hover:bg-orange-600"}`}
+                              >
+                                {student.accepted ? "Accepted" : "Not Yet Accepted"}
+                              </Badge>
                             </div>
-                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                              {student.notes}
-                            </p>
+                            
+                            {student.notes && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleNotes(student.id)}
+                                className="text-muted-foreground hover:text-primary p-1 h-auto"
+                              >
+                                {expandedNotes.has(student.id) ? (
+                                  <EyeOff className="h-3 w-3" />
+                                ) : (
+                                  <Eye className="h-3 w-3" />
+                                )}
+                              </Button>
+                            )}
                           </div>
-                        )}
+                        </div>
+                      </div>
+
+                      {/* Student Details - Mobile Optimized */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-muted-foreground">
+                        <p><span className="font-medium">ID:</span> {student.id_number}</p>
+                        <p><span className="font-medium">Age:</span> {student.age}</p>
+                        <p className="sm:col-span-2"><span className="font-medium">Email:</span> {student.email}</p>
+                        <p><span className="font-medium">Mobile:</span> {student.mobile}</p>
+                        <p><span className="font-medium">Course Date:</span> {formatDate(student.course_date)}</p>
+                        <p className="sm:col-span-2"><span className="font-medium">Added:</span> {formatDate(student.created_at)}</p>
                       </div>
                       
+                      {/* Notes Section */}
+                      {student.notes && expandedNotes.has(student.id) && (
+                        <div className="mt-4 p-3 sm:p-4 bg-muted/30 rounded-lg border border-primary/20">
+                          <div className="flex items-center gap-2 mb-2">
+                            <FileText className="h-4 w-4 text-primary" />
+                            <span className="font-medium text-primary text-sm">Notes</span>
+                          </div>
+                          <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                            {student.notes}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Action Buttons - Mobile Optimized */}
                       {isAdmin && (
-                        <div className="flex gap-2 items-center">
-                          <div className="flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-primary/20">
+                          <div className="flex items-center gap-2 justify-center sm:justify-start">
                             <Switch
                               checked={student.accepted}
                               onCheckedChange={() => handleAcceptanceToggle(student.id, student.accepted)}
                             />
                             <span className="text-sm text-muted-foreground">Accept</span>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(student)}
-                            className="border-primary/30 hover:border-primary"
-                          >
-                            <Edit3 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDelete(student.id)}
-                            className="border-destructive/30 hover:border-destructive text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-2 justify-center sm:justify-end sm:ml-auto">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEdit(student)}
+                              className="border-primary/30 hover:border-primary flex-1 sm:flex-none"
+                            >
+                              <Edit3 className="h-4 w-4 mr-1 sm:mr-0" />
+                              <span className="sm:hidden">Edit</span>
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDelete(student.id)}
+                              className="border-destructive/30 hover:border-destructive text-destructive flex-1 sm:flex-none"
+                            >
+                              <Trash2 className="h-4 w-4 mr-1 sm:mr-0" />
+                              <span className="sm:hidden">Delete</span>
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </div>
