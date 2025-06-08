@@ -39,6 +39,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface Student {
   id: string;
@@ -280,10 +281,13 @@ const Index: React.FC = () => {
           <Users className="w-8 h-8 text-primary" />
           <h1 className="text-3xl font-bold">Students ({students.length})</h1>
         </div>
-        <Button onClick={() => setCurrentPage('home')} variant="outline">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Student
-        </Button>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Button onClick={() => setCurrentPage('home')} variant="outline">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Student
+          </Button>
+        </div>
       </div>
 
       {students.length === 0 ? (
@@ -473,12 +477,12 @@ const Index: React.FC = () => {
     );
   };
 
-  const renderThemeSelector = () => (
+  const renderIconSelector = () => (
     <Popover open={themeSelectorOpen} onOpenChange={setThemeSelectorOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" role="switch" aria-checked={themeSelectorOpen}>
           <Palette className="mr-2 h-4 w-4" />
-          Theme
+          Icon
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-60 space-y-2">
@@ -510,10 +514,13 @@ const Index: React.FC = () => {
               <User className="w-8 h-8 text-primary" />
               <h1 className="text-3xl font-bold">Add Student</h1>
             </div>
-            <Button onClick={() => navigate('/notes')} variant="outline">
-              <FileText className="w-4 h-4 mr-2" />
-              Private Notes
-            </Button>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Button onClick={() => navigate('/notes')} variant="outline">
+                <FileText className="w-4 h-4 mr-2" />
+                Private Notes
+              </Button>
+            </div>
           </div>
           <Card>
             <CardHeader>
@@ -580,7 +587,7 @@ const Index: React.FC = () => {
                   <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Additional notes..." />
                 </div>
                 <div className="flex items-center justify-between">
-                  {renderThemeSelector()}
+                  {renderIconSelector()}
                   <Button type="submit">Add Student</Button>
                 </div>
                 <Button onClick={() => setCurrentPage('list')} variant="secondary">
