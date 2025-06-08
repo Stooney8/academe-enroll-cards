@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Trash2, Edit3, Plus, Users, GraduationCap, UserCheck, Search, Eye, EyeOff, FileText, Info, Phone, Mail, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface Student {
   id: string;
@@ -331,7 +332,7 @@ const Index = () => {
             Manage your students efficiently with our comprehensive dashboard
           </p>
           
-          {/* User Info */}
+          {/* User Info and Theme Toggle */}
           {userProfile && (
             <div className="flex items-center justify-center gap-2 sm:gap-4 mt-4 sm:mt-6 flex-wrap">
               <Badge variant="secondary" className="px-2 py-1 sm:px-4 sm:py-2 text-xs">
@@ -344,6 +345,7 @@ const Index = () => {
               >
                 {userProfile.role.toUpperCase()}
               </Badge>
+              <ThemeToggle />
             </div>
           )}
         </div>
