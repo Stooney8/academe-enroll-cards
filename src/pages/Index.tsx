@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Edit3, Plus, Users, GraduationCap, UserCheck, Search, Eye, EyeOff, FileText, Info } from "lucide-react";
+import { Trash2, Edit3, Plus, Users, GraduationCap, UserCheck, Search, Eye, EyeOff, FileText, Info, Phone, Mail, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -318,29 +318,29 @@ const Index = () => {
 
   return (
     <div className="min-h-screen gradient-bg">
-      <div className="container mx-auto p-4 sm:p-6 space-y-6 sm:space-y-8">
+      <div className="container mx-auto p-3 sm:p-6 space-y-4 sm:space-y-8 max-w-7xl">
         {/* Header */}
-        <div className="text-center space-y-4 animate-fade-in-up">
+        <div className="text-center space-y-3 sm:space-y-4 animate-fade-in-up">
           <div className="flex items-center justify-center gap-2 sm:gap-3">
-            <GraduationCap className="h-8 w-8 sm:h-12 sm:w-12 text-primary" />
-            <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent">
+            <GraduationCap className="h-6 w-6 sm:h-12 sm:w-12 text-primary" />
+            <h1 className="text-xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent">
               Student Management System
             </h1>
           </div>
-          <p className="text-muted-foreground text-sm sm:text-lg max-w-2xl mx-auto px-4">
+          <p className="text-muted-foreground text-xs sm:text-lg max-w-2xl mx-auto px-4">
             Manage your students efficiently with our comprehensive dashboard
           </p>
           
           {/* User Info */}
           {userProfile && (
-            <div className="flex items-center justify-center gap-2 sm:gap-4 mt-6 flex-wrap">
-              <Badge variant="secondary" className="px-3 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm">
+            <div className="flex items-center justify-center gap-2 sm:gap-4 mt-4 sm:mt-6 flex-wrap">
+              <Badge variant="secondary" className="px-2 py-1 sm:px-4 sm:py-2 text-xs">
                 <UserCheck className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 {userProfile.first_name} {userProfile.last_name}
               </Badge>
               <Badge 
                 variant={isAdmin ? "default" : "outline"} 
-                className="px-3 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm"
+                className="px-2 py-1 sm:px-4 sm:py-2 text-xs"
               >
                 {userProfile.role.toUpperCase()}
               </Badge>
@@ -349,34 +349,34 @@ const Index = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 animate-fade-in-up">
+        <div className="grid grid-cols-3 gap-2 sm:gap-6 animate-fade-in-up">
           <Card className="card-gradient border-primary/20">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-              <Users className="h-4 w-4 text-primary" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium">Total</CardTitle>
+              <Users className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-primary">{students.length}</div>
+            <CardContent className="p-3 sm:p-6 pt-0">
+              <div className="text-lg sm:text-2xl font-bold text-primary">{students.length}</div>
             </CardContent>
           </Card>
 
           <Card className="card-gradient border-primary/20">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Students</CardTitle>
-              <GraduationCap className="h-4 w-4 text-primary" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium">Active</CardTitle>
+              <GraduationCap className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-primary">{filteredStudents.length}</div>
+            <CardContent className="p-3 sm:p-6 pt-0">
+              <div className="text-lg sm:text-2xl font-bold text-primary">{filteredStudents.length}</div>
             </CardContent>
           </Card>
 
           <Card className="card-gradient border-primary/20">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Your Role</CardTitle>
-              <UserCheck className="h-4 w-4 text-primary" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium">Role</CardTitle>
+              <UserCheck className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-primary">
+            <CardContent className="p-3 sm:p-6 pt-0">
+              <div className="text-sm sm:text-2xl font-bold text-primary">
                 {isAdmin ? "Admin" : isTeacher ? "Teacher" : "User"}
               </div>
             </CardContent>
@@ -385,23 +385,23 @@ const Index = () => {
 
         {/* Search and Filter Controls */}
         <Card className="card-gradient border-primary/20 animate-fade-in-up">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+          <CardHeader className="p-3 sm:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-xl">
               <Search className="h-4 w-4 sm:h-5 sm:w-5" />
               Search & Filter
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-col gap-4">
+          <CardContent className="space-y-3 sm:space-y-4 p-3 sm:p-6 pt-0">
+            <div className="flex flex-col gap-3 sm:gap-4">
               <div className="flex-1">
                 <Input
                   placeholder="Search by name, ID, email, or mobile..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="bg-background/50 border-primary/30"
+                  className="bg-background/50 border-primary/30 text-sm"
                 />
               </div>
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <Select value={courseFilter} onValueChange={setCourseFilter}>
                   <SelectTrigger className="w-full sm:w-48 bg-background/50 border-primary/30">
                     <SelectValue placeholder="Filter by course" />
@@ -418,7 +418,7 @@ const Index = () => {
                 {isAdmin && (
                   <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button onClick={resetForm} className="w-full sm:w-auto">
+                      <Button onClick={resetForm} className="w-full sm:w-auto text-sm">
                         <Plus className="h-4 w-4 mr-2" />
                         Add Student
                       </Button>
@@ -567,14 +567,14 @@ const Index = () => {
           </CardContent>
         </Card>
 
-        {/* Students List */}
-        <div className="space-y-4 animate-fade-in-up">
+        {/* Students List - Redesigned Cards */}
+        <div className="space-y-3 sm:space-y-4 animate-fade-in-up">
           {filteredStudents.length === 0 ? (
             <Card className="card-gradient border-primary/20">
-              <CardContent className="text-center py-12">
-                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No students found</h3>
-                <p className="text-muted-foreground">
+              <CardContent className="text-center py-8 sm:py-12">
+                <Users className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-base sm:text-lg font-semibold mb-2">No students found</h3>
+                <p className="text-muted-foreground text-sm">
                   {searchTerm || courseFilter !== "all"
                     ? "Try adjusting your search filters"
                     : "Get started by adding your first student"}
@@ -582,39 +582,35 @@ const Index = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-3 sm:gap-4">
               {filteredStudents.map((student) => (
                 <Card key={student.id} className="card-gradient border-primary/20 hover:border-primary/50 transition-all duration-200">
-                  <CardContent className="p-4 sm:p-6">
-                    <div className="space-y-4">
-                      {/* Student Header - Mobile Optimized */}
-                      <div className="flex flex-col gap-3">
-                        <div className="flex flex-wrap items-start gap-2">
-                          <h3 className="text-lg font-semibold text-primary flex-shrink-0">
+                  <CardContent className="p-3 sm:p-6">
+                    {/* Mobile-First Design */}
+                    <div className="space-y-3">
+                      {/* Header Row */}
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="text-base sm:text-lg font-semibold text-primary leading-tight">
                             {student.name}
                           </h3>
-                          <div className="flex flex-wrap gap-2">
-                            <Badge variant="outline" className="border-primary/30 text-xs">
-                              {student.course_name}
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <Badge 
+                              variant={student.accepted ? "default" : "secondary"}
+                              className={`text-xs px-2 py-1 ${
+                                student.accepted 
+                                  ? "bg-green-600 hover:bg-green-700" 
+                                  : "bg-orange-500 hover:bg-orange-600"
+                              }`}
+                            >
+                              {student.accepted ? "✓" : "⏳"}
                             </Badge>
-                            
-                            {/* Acceptance Status Badge */}
-                            <div className="flex items-center gap-1">
-                              <Info className="h-3 w-3 text-muted-foreground" />
-                              <Badge 
-                                variant={student.accepted ? "default" : "secondary"}
-                                className={`text-xs ${student.accepted ? "bg-green-600 hover:bg-green-700" : "bg-orange-500 hover:bg-orange-600"}`}
-                              >
-                                {student.accepted ? "Accepted" : "Not Yet Accepted"}
-                              </Badge>
-                            </div>
-                            
                             {student.notes && (
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => toggleNotes(student.id)}
-                                className="text-muted-foreground hover:text-primary p-1 h-auto"
+                                className="text-muted-foreground hover:text-primary p-1 h-6 w-6"
                               >
                                 {expandedNotes.has(student.id) ? (
                                   <EyeOff className="h-3 w-3" />
@@ -625,59 +621,82 @@ const Index = () => {
                             )}
                           </div>
                         </div>
+                        
+                        <Badge variant="outline" className="border-primary/30 text-xs w-fit">
+                          {student.course_name}
+                        </Badge>
                       </div>
 
-                      {/* Student Details - Mobile Optimized */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-muted-foreground">
-                        <p><span className="font-medium">ID:</span> {student.id_number}</p>
-                        <p><span className="font-medium">Age:</span> {student.age}</p>
-                        <p className="sm:col-span-2"><span className="font-medium">Email:</span> {student.email}</p>
-                        <p><span className="font-medium">Mobile:</span> {student.mobile}</p>
-                        <p><span className="font-medium">Course Date:</span> {formatDate(student.course_date)}</p>
-                        <p className="sm:col-span-2"><span className="font-medium">Added:</span> {formatDate(student.created_at)}</p>
+                      {/* Contact Info - Compact Grid */}
+                      <div className="grid grid-cols-1 gap-2 text-xs sm:text-sm">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <span className="font-medium min-w-12">ID:</span>
+                          <span className="text-foreground">{student.id_number}</span>
+                          <span className="font-medium ml-4 min-w-8">Age:</span>
+                          <span className="text-foreground">{student.age}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Mail className="h-3 w-3 flex-shrink-0" />
+                          <span className="text-foreground truncate">{student.email}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Phone className="h-3 w-3 flex-shrink-0" />
+                          <span className="text-foreground">{student.mobile}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Calendar className="h-3 w-3 flex-shrink-0" />
+                          <span className="text-foreground">{formatDate(student.course_date)}</span>
+                        </div>
                       </div>
                       
                       {/* Notes Section */}
                       {student.notes && expandedNotes.has(student.id) && (
-                        <div className="mt-4 p-3 sm:p-4 bg-muted/30 rounded-lg border border-primary/20">
+                        <div className="mt-3 p-3 bg-muted/20 rounded-lg border border-primary/10">
                           <div className="flex items-center gap-2 mb-2">
-                            <FileText className="h-4 w-4 text-primary" />
-                            <span className="font-medium text-primary text-sm">Notes</span>
+                            <FileText className="h-3 w-3 text-primary" />
+                            <span className="font-medium text-primary text-xs">Notes</span>
                           </div>
-                          <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          <p className="text-xs text-muted-foreground whitespace-pre-wrap">
                             {student.notes}
                           </p>
                         </div>
                       )}
 
-                      {/* Action Buttons - Mobile Optimized */}
+                      {/* Action Buttons */}
                       {isAdmin && (
-                        <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-primary/20">
-                          <div className="flex items-center gap-2 justify-center sm:justify-start">
+                        <div className="flex flex-col gap-2 pt-2 border-t border-primary/10">
+                          <div className="flex items-center justify-center gap-2">
                             <Switch
                               checked={student.accepted}
                               onCheckedChange={() => handleAcceptanceToggle(student.id, student.accepted)}
+                              className="scale-75"
                             />
-                            <span className="text-sm text-muted-foreground">Accept</span>
+                            <span className="text-xs text-muted-foreground">
+                              {student.accepted ? "Accepted" : "Accept Student"}
+                            </span>
                           </div>
-                          <div className="flex gap-2 justify-center sm:justify-end sm:ml-auto">
+                          
+                          <div className="flex gap-2">
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleEdit(student)}
-                              className="border-primary/30 hover:border-primary flex-1 sm:flex-none"
+                              className="border-primary/30 hover:border-primary flex-1 text-xs py-1 h-8"
                             >
-                              <Edit3 className="h-4 w-4 mr-1 sm:mr-0" />
-                              <span className="sm:hidden">Edit</span>
+                              <Edit3 className="h-3 w-3 mr-1" />
+                              Edit
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleDelete(student.id)}
-                              className="border-destructive/30 hover:border-destructive text-destructive flex-1 sm:flex-none"
+                              className="border-destructive/30 hover:border-destructive text-destructive flex-1 text-xs py-1 h-8"
                             >
-                              <Trash2 className="h-4 w-4 mr-1 sm:mr-0" />
-                              <span className="sm:hidden">Delete</span>
+                              <Trash2 className="h-3 w-3 mr-1" />
+                              Delete
                             </Button>
                           </div>
                         </div>
