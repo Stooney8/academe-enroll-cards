@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, CalendarIcon, ArrowRight, ArrowLeft, User, Users, UserPlus, UserRound, Mail, Phone, BookOpen, IdCard, Palette, Check, X, FileText } from 'lucide-react';
+import { Calendar, CalendarIcon, ArrowRight, ArrowLeft, User, Users, UserPlus, UserRound, Mail, Phone, BookOpen, IdCard, Palette, Check, X, FileText, Eye, EyeOff } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -119,6 +119,7 @@ const Index: React.FC = () => {
   const [language, setLanguage] = useState<'ar' | 'en'>('en');
   const [currentTheme, setCurrentTheme] = useState<Theme>('dark');
   const [isLoading, setIsLoading] = useState(false);
+  const [visibleNotes, setVisibleNotes] = useState<Set<string>>(new Set());
   
   const [formData, setFormData] = useState({
     name: '',
@@ -394,6 +395,18 @@ const Index: React.FC = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const toggleNotesVisibility = (studentId: string) => {
+    setVisibleNotes(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(studentId)) {
+        newSet.delete(studentId);
+      } else {
+        newSet.add(studentId);
+      }
+      return newSet;
+    });
   };
 
   const ThemeSelector = () => (
@@ -717,6 +730,7 @@ const Index: React.FC = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {students.map((student) => {
               const IconComponent = student.icon;
+              const isNotesVisible = visibleNotes.has(student.id);
               return (
                 <Card
                   key={student.id}
@@ -795,10 +809,26 @@ const Index: React.FC = () => {
                       </div>
                       {student.notes && (
                         <div className={`bg-gradient-to-r ${theme.cardBg} p-3 rounded-lg`}>
-                          <p className={theme.textSecondary}>
+                          <div className="flex items-center justify-between mb-2">
                             <span className={`${theme.accent} font-medium`}>{t.notes}:</span>
-                            <span className={`${theme.text} ${isRTL ? 'mr-2' : 'ml-2'}`}>{student.notes}</span>
-                          </p>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toggleNotesVisibility(student.id)}
+                              className={`h-6 w-6 p-0 ${theme.button}`}
+                            >
+                              {isNotesVisible ? (
+                                <EyeOff className="w-4 h-4" />
+                              ) : (
+                                <Eye className="w-4 h-4" />
+                              )}
+                            </Button>
+                          </div>
+                          {isNotesVisible && (
+                            <p className={`${theme.text} ${isRTL ? 'mr-2' : 'ml-2'}`}>
+                              {student.notes}
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>
