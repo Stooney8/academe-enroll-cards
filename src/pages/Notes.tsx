@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Save, FileText, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, FileText, Trash2, Eye, EyeOff } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,6 +21,7 @@ const Notes = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [showNotes, setShowNotes] = useState(false);
 
   // Load notes from localStorage on component mount
   useEffect(() => {
@@ -129,73 +129,85 @@ const Notes = () => {
             Private Notes
           </h1>
           
-          <Button
-            onClick={createNewNote}
-            className="bg-gradient-to-r from-gray-700 to-slate-700 hover:from-gray-600 hover:to-slate-600 text-white"
-          >
-            <FileText className="w-4 h-4 mr-2" />
-            New Note
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setShowNotes(!showNotes)}
+              variant="outline"
+              className="bg-gray-800/50 border-gray-600 text-gray-100 hover:bg-gray-700/60"
+            >
+              {showNotes ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+              {showNotes ? 'Hide Notes' : 'Show Notes'}
+            </Button>
+            <Button
+              onClick={createNewNote}
+              className="bg-gradient-to-r from-gray-700 to-slate-700 hover:from-gray-600 hover:to-slate-600 text-white"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              New Note
+            </Button>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Notes List */}
-          <div className="lg:col-span-1">
-            <Card className="bg-gradient-to-br from-gray-800/60 to-slate-800/60 border-gray-700/50 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-gray-100">
-                  Your Notes ({notes.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 max-h-96 overflow-y-auto">
-                {notes.length === 0 ? (
-                  <p className="text-gray-400 text-center py-8">
-                    No notes yet. Create your first note!
-                  </p>
-                ) : (
-                  notes.map((note) => (
-                    <div
-                      key={note.id}
-                      className={`p-3 rounded-lg cursor-pointer transition-all duration-200 border ${
-                        currentNote?.id === note.id
-                          ? 'bg-gray-700/60 border-gray-500'
-                          : 'bg-gray-800/40 border-gray-700/30 hover:bg-gray-700/40'
-                      }`}
-                      onClick={() => selectNote(note)}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-gray-100 font-medium truncate">
-                            {note.title}
-                          </h3>
-                          <p className="text-gray-400 text-sm truncate mt-1">
-                            {note.content || 'No content'}
-                          </p>
-                          <p className="text-gray-500 text-xs mt-2">
-                            {note.updatedAt.toLocaleDateString()}
-                          </p>
+          {/* Notes List - Conditionally rendered */}
+          {showNotes && (
+            <div className="lg:col-span-1">
+              <Card className="bg-gradient-to-br from-gray-800/60 to-slate-800/60 border-gray-700/50 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-gray-100">
+                    Your Notes ({notes.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 max-h-96 overflow-y-auto">
+                  {notes.length === 0 ? (
+                    <p className="text-gray-400 text-center py-8">
+                      No notes yet. Create your first note!
+                    </p>
+                  ) : (
+                    notes.map((note) => (
+                      <div
+                        key={note.id}
+                        className={`p-3 rounded-lg cursor-pointer transition-all duration-200 border ${
+                          currentNote?.id === note.id
+                            ? 'bg-gray-700/60 border-gray-500'
+                            : 'bg-gray-800/40 border-gray-700/30 hover:bg-gray-700/40'
+                        }`}
+                        onClick={() => selectNote(note)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-gray-100 font-medium truncate">
+                              {note.title}
+                            </h3>
+                            <p className="text-gray-400 text-sm truncate mt-1">
+                              {note.content || 'No content'}
+                            </p>
+                            <p className="text-gray-500 text-xs mt-2">
+                              {note.updatedAt.toLocaleDateString()}
+                            </p>
+                          </div>
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteNote(note.id);
+                            }}
+                            variant="ghost"
+                            size="sm"
+                            className="text-gray-400 hover:text-red-400 hover:bg-red-600/20"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteNote(note.id);
-                          }}
-                          variant="ghost"
-                          size="sm"
-                          className="text-gray-400 hover:text-red-400 hover:bg-red-600/20"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
                       </div>
-                    </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                    ))
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
-          {/* Note Editor */}
-          <div className="lg:col-span-2">
+          {/* Note Editor - Adjust column span based on notes visibility */}
+          <div className={showNotes ? "lg:col-span-2" : "lg:col-span-3"}>
             <Card className="bg-gradient-to-br from-gray-800/60 to-slate-800/60 border-gray-700/50 backdrop-blur-sm">
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -269,7 +281,7 @@ const Notes = () => {
                       No Note Selected
                     </h3>
                     <p className="text-gray-400 mb-6">
-                      Select a note from the list or create a new one to get started.
+                      {showNotes ? 'Select a note from the list or create a new one to get started.' : 'Show your notes list or create a new note to get started.'}
                     </p>
                     <Button
                       onClick={createNewNote}
