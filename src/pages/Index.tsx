@@ -1,741 +1,494 @@
 
-import React, { useState, useEffect } from 'react';
-import { Calendar, CalendarIcon, ArrowRight, ArrowLeft, User, Users, UserPlus, UserRound, Mail, Phone, BookOpen, IdCard, Palette, Check, X, FileText, Eye, EyeOff, Edit, Trash2, LogOut, Shield } from 'lucide-react';
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { Trash2, Edit3, Plus, Users, GraduationCap, UserCheck, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from "@/hooks/useAuth";
 
 interface Student {
   id: string;
-  name: string;
-  idNumber: string;
-  mobile: string;
+  first_name: string;
+  last_name: string;
+  student_id: string;
   email: string;
-  courseName: string;
-  courseDate: Date;
-  age: string;
-  accepted: boolean;
-  notes: string;
-  iconType: string;
+  level: string;
+  created_at: string;
 }
 
-const StudentManagementSystem = () => {
-  const { user, userProfile, signOut, isAdmin, isTeacher, loading: authLoading } = useAuth();
-  const { toast } = useToast();
-  
+const Index = () => {
   const [students, setStudents] = useState<Student[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    idNumber: '',
-    mobile: '',
-    email: '',
-    courseName: '',
-    courseDate: null as Date | null,
-    age: '',
-    accepted: false,
-    notes: '',
-    iconType: 'User',
-  });
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [levelFilter, setLevelFilter] = useState("all");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
-  const [editFormData, setEditFormData] = useState({
-    name: '',
-    idNumber: '',
-    mobile: '',
-    email: '',
-    courseName: '',
-    courseDate: null as Date | null,
-    age: '',
-    accepted: false,
-    notes: '',
-    iconType: 'User',
+  const [formData, setFormData] = useState({
+    first_name: "",
+    last_name: "",
+    student_id: "",
+    email: "",
+    level: "",
   });
 
-  // Debug logging to check user role
-  useEffect(() => {
-    console.log('Auth state:', { user: user?.email, userProfile, isAdmin, isTeacher, authLoading });
-  }, [user, userProfile, isAdmin, isTeacher, authLoading]);
+  const { toast } = useToast();
+  const { user, userProfile, isAdmin, isTeacher } = useAuth();
 
-  const formatDateForSupabase = (date: Date): string => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
+  console.log("Current auth state:", { user, userProfile, isAdmin, isTeacher });
 
-  const parseDateFromSupabase = (dateString: string): Date => {
-    const [year, month, day] = dateString.split('-').map(Number);
-    return new Date(year, month - 1, day);
-  };
-
-  useEffect(() => {
-    if (!user || authLoading) return;
-    
-    const loadStudents = async () => {
+  // Fetch students
+  const fetchStudents = async () => {
+    try {
       setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('students')
-          .select('*')
-          .order('created_at', { ascending: false });
+      const { data, error } = await supabase
+        .from("students")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-        if (error) {
-          console.error('Error loading students:', error);
-          toast({
-            title: "Error loading students",
-            description: error.message,
-            variant: "destructive",
-          });
-          return;
-        }
-
-        const studentsData: Student[] = data?.map((student: any) => ({
-          id: student.id,
-          name: student.name,
-          idNumber: student.id_number,
-          mobile: student.mobile,
-          email: student.email,
-          courseName: student.course_name,
-          courseDate: parseDateFromSupabase(student.course_date),
-          age: student.age,
-          accepted: student.accepted,
-          notes: student.notes || '',
-          iconType: student.icon_type || 'User',
-        })) || [];
-
-        setStudents(studentsData);
-      } catch (error) {
-        console.error('Error in loadStudents:', error);
+      if (error) {
+        console.error("Error fetching students:", error);
         toast({
           title: "Error",
-          description: "Failed to load students",
+          description: "Failed to fetch students",
           variant: "destructive",
         });
-      } finally {
-        setLoading(false);
+        return;
       }
-    };
 
-    loadStudents();
-  }, [user, authLoading, toast]);
+      setStudents(data || []);
+    } catch (error) {
+      console.error("Error in fetchStudents:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Show loading while auth is initializing
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    fetchStudents();
+  }, []);
 
+  // Filter students
+  const filteredStudents = students.filter((student) => {
+    const matchesSearch = 
+      student.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.student_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.email.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesLevel = levelFilter === "all" || student.level === levelFilter;
+
+    return matchesSearch && matchesLevel;
+  });
+
+  // Reset form
+  const resetForm = () => {
+    setFormData({
+      first_name: "",
+      last_name: "",
+      student_id: "",
+      email: "",
+      level: "",
+    });
+    setEditingStudent(null);
+  };
+
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isTeacher) {
+    
+    if (!isAdmin) {
       toast({
         title: "Access Denied",
-        description: "Only teachers and admins can add students",
+        description: "Only administrators can modify student records",
         variant: "destructive",
       });
       return;
     }
 
-    if (!formData.name || !formData.idNumber || !formData.mobile || !formData.email || !formData.courseName || !formData.courseDate || !formData.age) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('students')
-        .insert([
-          {
-            name: formData.name,
-            id_number: formData.idNumber,
-            mobile: formData.mobile,
-            email: formData.email,
-            course_name: formData.courseName,
-            course_date: formatDateForSupabase(formData.courseDate!),
-            age: formData.age,
-            accepted: formData.accepted,
-            notes: formData.notes,
-            icon_type: formData.iconType,
-            user_id: user?.id,
-          }
-        ])
-        .select()
-        .single();
+      if (editingStudent) {
+        // Update existing student
+        const { error } = await supabase
+          .from("students")
+          .update(formData)
+          .eq("id", editingStudent.id);
 
-      if (error) {
-        console.error('Error adding student:', error);
+        if (error) throw error;
+
         toast({
-          title: "Error adding student",
-          description: error.message,
-          variant: "destructive",
+          title: "Success",
+          description: "Student updated successfully",
         });
-        return;
+      } else {
+        // Create new student
+        const { error } = await supabase
+          .from("students")
+          .insert([formData]);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Student added successfully",
+        });
       }
 
-      const newStudent: Student = {
-        id: data.id,
-        name: data.name,
-        idNumber: data.id_number,
-        mobile: data.mobile,
-        email: data.email,
-        courseName: data.course_name,
-        courseDate: parseDateFromSupabase(data.course_date),
-        age: data.age,
-        accepted: data.accepted,
-        notes: data.notes || '',
-        iconType: data.icon_type || 'User',
-      };
-
-      setStudents(prev => [newStudent, ...prev]);
-      setFormData({
-        name: '',
-        idNumber: '',
-        mobile: '',
-        email: '',
-        courseName: '',
-        courseDate: null,
-        age: '',
-        accepted: false,
-        notes: '',
-        iconType: 'User',
-      });
-
-      toast({
-        title: "Student added successfully",
-        description: `${newStudent.name} has been added to the system`,
-      });
-    } catch (error) {
-      console.error('Error in handleSubmit:', error);
+      fetchStudents();
+      setIsDialogOpen(false);
+      resetForm();
+    } catch (error: any) {
+      console.error("Error saving student:", error);
       toast({
         title: "Error",
-        description: "Failed to add student",
+        description: error.message || "Failed to save student",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleEdit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isTeacher) {
+  // Handle edit
+  const handleEdit = (student: Student) => {
+    if (!isAdmin) {
       toast({
         title: "Access Denied",
-        description: "Only teachers and admins can edit students",
+        description: "Only administrators can edit student records",
         variant: "destructive",
       });
       return;
     }
 
-    if (!editingStudent || !editFormData.name || !editFormData.idNumber || !editFormData.mobile || !editFormData.email || !editFormData.courseName || !editFormData.courseDate || !editFormData.age) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('students')
-        .update({
-          name: editFormData.name,
-          id_number: editFormData.idNumber,
-          mobile: editFormData.mobile,
-          email: editFormData.email,
-          course_name: editFormData.courseName,
-          course_date: formatDateForSupabase(editFormData.courseDate!),
-          age: editFormData.age,
-          accepted: editFormData.accepted,
-          notes: editFormData.notes,
-          icon_type: editFormData.iconType,
-        })
-        .eq('id', editingStudent.id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating student:', error);
-        toast({
-          title: "Error updating student",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const updatedStudent: Student = {
-        id: data.id,
-        name: data.name,
-        idNumber: data.id_number,
-        mobile: data.mobile,
-        email: data.email,
-        courseName: data.course_name,
-        courseDate: parseDateFromSupabase(data.course_date),
-        age: data.age,
-        accepted: data.accepted,
-        notes: data.notes || '',
-        iconType: data.icon_type || 'User',
-      };
-
-      setStudents(prev => prev.map(student => 
-        student.id === editingStudent.id ? updatedStudent : student
-      ));
-
-      setEditingStudent(null);
-      setEditFormData({
-        name: '',
-        idNumber: '',
-        mobile: '',
-        email: '',
-        courseName: '',
-        courseDate: null,
-        age: '',
-        accepted: false,
-        notes: '',
-        iconType: 'User',
-      });
-
-      toast({
-        title: "Student updated successfully",
-        description: `${updatedStudent.name}'s information has been updated`,
-      });
-    } catch (error) {
-      console.error('Error in handleEdit:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update student",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    setEditingStudent(student);
+    setFormData({
+      first_name: student.first_name,
+      last_name: student.last_name,
+      student_id: student.student_id,
+      email: student.email,
+      level: student.level,
+    });
+    setIsDialogOpen(true);
   };
 
+  // Handle delete
   const handleDelete = async (studentId: string) => {
     if (!isAdmin) {
       toast({
         title: "Access Denied",
-        description: "Only administrators can delete students",
+        description: "Only administrators can delete student records",
         variant: "destructive",
       });
       return;
     }
 
-    setLoading(true);
+    if (!confirm("Are you sure you want to delete this student?")) return;
+
     try {
       const { error } = await supabase
-        .from('students')
+        .from("students")
         .delete()
-        .eq('id', studentId);
+        .eq("id", studentId);
 
-      if (error) {
-        console.error('Error deleting student:', error);
-        toast({
-          title: "Error deleting student",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
+      if (error) throw error;
 
-      setStudents(prev => prev.filter(student => student.id !== studentId));
       toast({
-        title: "Student deleted successfully",
-        description: "The student has been removed from the system",
+        title: "Success",
+        description: "Student deleted successfully",
       });
-    } catch (error) {
-      console.error('Error in handleDelete:', error);
+
+      fetchStudents();
+    } catch (error: any) {
+      console.error("Error deleting student:", error);
       toast({
         title: "Error",
         description: "Failed to delete student",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen gradient-bg flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto p-6">
+    <div className="min-h-screen gradient-bg">
+      <div className="container mx-auto p-6 space-y-8">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Student Management System</h1>
-            <p className="text-gray-600 mt-1">
-              Welcome, {userProfile?.first_name || user?.email} 
-              {userProfile?.role && (
-                <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  {isAdmin && <Shield className="w-3 h-3 mr-1" />}
-                  {userProfile.role.charAt(0).toUpperCase() + userProfile.role.slice(1)}
-                </span>
-              )}
-            </p>
+        <div className="text-center space-y-4 animate-fade-in-up">
+          <div className="flex items-center justify-center gap-3">
+            <GraduationCap className="h-12 w-12 text-primary" />
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent">
+              Student Management System
+            </h1>
           </div>
-          <Button onClick={signOut} variant="outline" className="flex items-center gap-2">
-            <LogOut className="h-4 w-4" /> 
-            Sign Out
-          </Button>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Manage your students efficiently with our comprehensive dashboard
+          </p>
+          
+          {/* User Info */}
+          {userProfile && (
+            <div className="flex items-center justify-center gap-4 mt-6">
+              <Badge variant="secondary" className="px-4 py-2">
+                <UserCheck className="h-4 w-4 mr-2" />
+                {userProfile.first_name} {userProfile.last_name}
+              </Badge>
+              <Badge 
+                variant={isAdmin ? "default" : "outline"} 
+                className="px-4 py-2"
+              >
+                {userProfile.role.toUpperCase()}
+              </Badge>
+            </div>
+          )}
         </div>
 
-        {/* Add Student Form - Only show to teachers and admins */}
-        {isTeacher && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <UserPlus className="h-5 w-5" />
-                Add New Student
-              </CardTitle>
-              <CardDescription>
-                Fill in the student information to add them to the system
-              </CardDescription>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in-up">
+          <Card className="card-gradient border-primary/20">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+              <Users className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name">Name *</Label>
-                    <Input 
-                      id="name"
-                      value={formData.name} 
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
-                      required 
-                      placeholder="Enter student name"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="idNumber">ID Number *</Label>
-                    <Input 
-                      id="idNumber"
-                      value={formData.idNumber} 
-                      onChange={(e) => setFormData({ ...formData, idNumber: e.target.value })} 
-                      required 
-                      placeholder="Enter ID number"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="mobile">Mobile *</Label>
-                    <Input 
-                      id="mobile"
-                      value={formData.mobile} 
-                      onChange={(e) => setFormData({ ...formData, mobile: e.target.value })} 
-                      required 
-                      placeholder="Enter mobile number"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="email">Email *</Label>
-                    <Input 
-                      id="email"
-                      type="email"
-                      value={formData.email} 
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
-                      required 
-                      placeholder="Enter email address"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="courseName">Course Name *</Label>
-                    <Input 
-                      id="courseName"
-                      value={formData.courseName} 
-                      onChange={(e) => setFormData({ ...formData, courseName: e.target.value })} 
-                      required 
-                      placeholder="Enter course name"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="courseDate">Course Date *</Label>
-                    <Input 
-                      id="courseDate"
-                      type="date" 
-                      value={formData.courseDate ? formData.courseDate.toISOString().split('T')[0] : ''} 
-                      onChange={(e) => setFormData({ ...formData, courseDate: new Date(e.target.value) })} 
-                      required 
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="age">Age *</Label>
-                    <Input 
-                      id="age"
-                      value={formData.age} 
-                      onChange={(e) => setFormData({ ...formData, age: e.target.value })} 
-                      required 
-                      placeholder="Enter age"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <Label htmlFor="notes">Notes</Label>
-                    <Textarea 
-                      id="notes"
-                      value={formData.notes} 
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })} 
-                      placeholder="Additional notes about the student"
-                      rows={3}
-                    />
-                  </div>
-                </div>
-                <Button type="submit" disabled={loading} className="w-full md:w-auto">
-                  {loading ? 'Adding...' : 'Add Student'}
-                </Button>
-              </form>
+              <div className="text-2xl font-bold text-primary">{students.length}</div>
             </CardContent>
           </Card>
-        )}
 
-        {/* Students List */}
-        <Card>
+          <Card className="card-gradient border-primary/20">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Students</CardTitle>
+              <GraduationCap className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">{filteredStudents.length}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="card-gradient border-primary/20">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Your Role</CardTitle>
+              <UserCheck className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">
+                {isAdmin ? "Admin" : isTeacher ? "Teacher" : "User"}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Search and Filter Controls */}
+        <Card className="card-gradient border-primary/20 animate-fade-in-up">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Students ({students.length})
+              <Search className="h-5 w-5" />
+              Search & Filter
             </CardTitle>
-            <CardDescription>
-              Manage and view all registered students
-            </CardDescription>
           </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span className="ml-2">Loading students...</span>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <Input
+                  placeholder="Search by name, ID, or email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="bg-background/50 border-primary/30"
+                />
               </div>
-            ) : students.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No students found. {isTeacher ? 'Add your first student above.' : 'Contact an admin to add students.'}</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {students.map(student => (
-                  <div key={student.id} className="border rounded-lg p-4 bg-white shadow-sm">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg">{student.name}</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mt-2 text-sm text-gray-600">
-                          <div className="flex items-center gap-2">
-                            <IdCard className="h-4 w-4" />
-                            <span>ID: {student.idNumber}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Phone className="h-4 w-4" />
-                            <span>{student.mobile}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Mail className="h-4 w-4" />
-                            <span>{student.email}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <BookOpen className="h-4 w-4" />
-                            <span>{student.courseName}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4" />
-                            <span>{student.courseDate.toLocaleDateString()}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4" />
-                            <span>Age: {student.age}</span>
-                          </div>
+              <Select value={levelFilter} onValueChange={setLevelFilter}>
+                <SelectTrigger className="w-full sm:w-48 bg-background/50 border-primary/30">
+                  <SelectValue placeholder="Filter by level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Levels</SelectItem>
+                  <SelectItem value="Beginner">Beginner</SelectItem>
+                  <SelectItem value="Intermediate">Intermediate</SelectItem>
+                  <SelectItem value="Advanced">Advanced</SelectItem>
+                </SelectContent>
+              </Select>
+              {isAdmin && (
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={resetForm} className="whitespace-nowrap">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Student
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="card-gradient border-primary/30">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingStudent ? "Edit Student" : "Add New Student"}
+                      </DialogTitle>
+                      <DialogDescription>
+                        {editingStudent
+                          ? "Update the student information below."
+                          : "Fill in the student details below to add them to the system."}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="first_name">First Name</Label>
+                          <Input
+                            id="first_name"
+                            value={formData.first_name}
+                            onChange={(e) =>
+                              setFormData({ ...formData, first_name: e.target.value })
+                            }
+                            required
+                            className="bg-background/50 border-primary/30"
+                          />
                         </div>
-                        {student.notes && (
-                          <div className="mt-2 text-sm text-gray-600">
-                            <strong>Notes:</strong> {student.notes}
-                          </div>
-                        )}
-                        <div className="mt-2">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            student.accepted 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {student.accepted ? (
-                              <>
-                                <Check className="w-3 h-3 mr-1" />
-                                Accepted
-                              </>
-                            ) : (
-                              <>
-                                <X className="w-3 h-3 mr-1" />
-                                Pending
-                              </>
-                            )}
-                          </span>
+                        <div className="space-y-2">
+                          <Label htmlFor="last_name">Last Name</Label>
+                          <Input
+                            id="last_name"
+                            value={formData.last_name}
+                            onChange={(e) =>
+                              setFormData({ ...formData, last_name: e.target.value })
+                            }
+                            required
+                            className="bg-background/50 border-primary/30"
+                          />
                         </div>
                       </div>
-                      <div className="flex gap-2 ml-4">
-                        {isTeacher && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setEditingStudent(student);
-                              setEditFormData({
-                                name: student.name,
-                                idNumber: student.idNumber,
-                                mobile: student.mobile,
-                                email: student.email,
-                                courseName: student.courseName,
-                                courseDate: student.courseDate,
-                                age: student.age,
-                                accepted: student.accepted,
-                                notes: student.notes,
-                                iconType: student.iconType,
-                              });
-                            }}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {isAdmin && (
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDelete(student.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
+                      <div className="space-y-2">
+                        <Label htmlFor="student_id">Student ID</Label>
+                        <Input
+                          id="student_id"
+                          value={formData.student_id}
+                          onChange={(e) =>
+                            setFormData({ ...formData, student_id: e.target.value })
+                          }
+                          required
+                          className="bg-background/50 border-primary/30"
+                        />
                       </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) =>
+                            setFormData({ ...formData, email: e.target.value })
+                          }
+                          required
+                          className="bg-background/50 border-primary/30"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="level">Level</Label>
+                        <Select
+                          value={formData.level}
+                          onValueChange={(value) =>
+                            setFormData({ ...formData, level: value })
+                          }
+                        >
+                          <SelectTrigger className="bg-background/50 border-primary/30">
+                            <SelectValue placeholder="Select level" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Beginner">Beginner</SelectItem>
+                            <SelectItem value="Intermediate">Intermediate</SelectItem>
+                            <SelectItem value="Advanced">Advanced</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <DialogFooter>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setIsDialogOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button type="submit">
+                          {editingStudent ? "Update" : "Add"} Student
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
           </CardContent>
         </Card>
 
-        {/* Edit Student Dialog */}
-        <Dialog open={!!editingStudent} onOpenChange={() => setEditingStudent(null)}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Edit Student</DialogTitle>
-              <DialogDescription>
-                Update the student information below
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleEdit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="edit-name">Name *</Label>
-                  <Input 
-                    id="edit-name"
-                    value={editFormData.name} 
-                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })} 
-                    required 
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-idNumber">ID Number *</Label>
-                  <Input 
-                    id="edit-idNumber"
-                    value={editFormData.idNumber} 
-                    onChange={(e) => setEditFormData({ ...editFormData, idNumber: e.target.value })} 
-                    required 
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-mobile">Mobile *</Label>
-                  <Input 
-                    id="edit-mobile"
-                    value={editFormData.mobile} 
-                    onChange={(e) => setEditFormData({ ...editFormData, mobile: e.target.value })} 
-                    required 
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-email">Email *</Label>
-                  <Input 
-                    id="edit-email"
-                    type="email"
-                    value={editFormData.email} 
-                    onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })} 
-                    required 
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-courseName">Course Name *</Label>
-                  <Input 
-                    id="edit-courseName"
-                    value={editFormData.courseName} 
-                    onChange={(e) => setEditFormData({ ...editFormData, courseName: e.target.value })} 
-                    required 
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-courseDate">Course Date *</Label>
-                  <Input 
-                    id="edit-courseDate"
-                    type="date" 
-                    value={editFormData.courseDate ? editFormData.courseDate.toISOString().split('T')[0] : ''} 
-                    onChange={(e) => setEditFormData({ ...editFormData, courseDate: new Date(e.target.value) })} 
-                    required 
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-age">Age *</Label>
-                  <Input 
-                    id="edit-age"
-                    value={editFormData.age} 
-                    onChange={(e) => setEditFormData({ ...editFormData, age: e.target.value })} 
-                    required 
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="edit-accepted"
-                    checked={editFormData.accepted}
-                    onChange={(e) => setEditFormData({ ...editFormData, accepted: e.target.checked })}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <Label htmlFor="edit-accepted">Accepted</Label>
-                </div>
-                <div className="md:col-span-2">
-                  <Label htmlFor="edit-notes">Notes</Label>
-                  <Textarea 
-                    id="edit-notes"
-                    value={editFormData.notes} 
-                    onChange={(e) => setEditFormData({ ...editFormData, notes: e.target.value })} 
-                    rows={3}
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setEditingStudent(null)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={loading}>
-                  {loading ? 'Updating...' : 'Update Student'}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+        {/* Students List */}
+        <div className="space-y-4 animate-fade-in-up">
+          {filteredStudents.length === 0 ? (
+            <Card className="card-gradient border-primary/20">
+              <CardContent className="text-center py-12">
+                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No students found</h3>
+                <p className="text-muted-foreground">
+                  {searchTerm || levelFilter !== "all"
+                    ? "Try adjusting your search filters"
+                    : "Get started by adding your first student"}
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4">
+              {filteredStudents.map((student) => (
+                <Card key={student.id} className="card-gradient border-primary/20 hover:border-primary/50 transition-all duration-200">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <h3 className="text-lg font-semibold text-primary">
+                            {student.first_name} {student.last_name}
+                          </h3>
+                          <Badge variant="outline" className="border-primary/30">
+                            {student.level}
+                          </Badge>
+                        </div>
+                        <div className="text-sm text-muted-foreground space-y-1">
+                          <p><span className="font-medium">ID:</span> {student.student_id}</p>
+                          <p><span className="font-medium">Email:</span> {student.email}</p>
+                          <p><span className="font-medium">Added:</span> {new Date(student.created_at).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      {isAdmin && (
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(student)}
+                            className="border-primary/30 hover:border-primary"
+                          >
+                            <Edit3 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(student.id)}
+                            className="border-destructive/30 hover:border-destructive text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
-export default StudentManagementSystem;
+export default Index;
