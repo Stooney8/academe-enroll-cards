@@ -1,19 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
-import { Calendar, CalendarIcon, ArrowRight, ArrowLeft, User, Users, UserPlus, UserRound, Mail, Phone, BookOpen, IdCard, Palette, Check, X, FileText, Eye, EyeOff, Edit, Trash2 } from 'lucide-react';
+import { Calendar, CalendarIcon, ArrowRight, ArrowLeft, User, Users, UserPlus, UserRound, Mail, Phone, BookOpen, IdCard, Palette, Check, X, FileText, Eye, EyeOff, Edit, Trash2, LogOut, Shield } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Switch } from "@/components/ui/switch";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 
 interface Student {
   id: string;
@@ -25,104 +21,16 @@ interface Student {
   courseDate: Date;
   age: string;
   accepted: boolean;
-  notes?: string;
-  icon: any;
+  notes: string;
+  iconType: string;
 }
 
-type Theme = 'dark' | 'blue' | 'green' | 'purple' | 'orange';
-
-const LUCIDE_ICONS = [User, UserRound, UserPlus, BookOpen, Mail, Phone, IdCard];
-
-const themes = {
-  dark: {
-    name: 'Dark',
-    gradient: 'from-gray-900 via-slate-900 to-gray-900',
-    cardBg: 'from-gray-800/60 to-slate-800/60',
-    cardBorder: 'border-gray-700/50',
-    text: 'text-gray-100',
-    textSecondary: 'text-gray-300',
-    textMuted: 'text-gray-500',
-    button: 'bg-gray-800/50 border-gray-600 text-gray-100 hover:bg-gray-700/60',
-    buttonPrimary: 'from-gray-700 to-slate-700 hover:from-gray-600 hover:to-slate-600',
-    input: 'bg-gray-800/50 border-gray-600 text-gray-100 placeholder-gray-400 focus:border-gray-400',
-    accent: 'text-gray-300',
-    accepted: 'bg-green-600/20 border-green-500/50 text-green-400',
-    rejected: 'bg-red-600/20 border-red-500/50 text-red-400'
-  },
-  blue: {
-    name: 'Ocean Blue',
-    gradient: 'from-blue-900 via-indigo-900 to-slate-900',
-    cardBg: 'from-blue-800/60 to-indigo-800/60',
-    cardBorder: 'border-blue-700/50',
-    text: 'text-blue-100',
-    textSecondary: 'text-blue-200',
-    textMuted: 'text-blue-400',
-    button: 'bg-blue-800/50 border-blue-600 text-blue-100 hover:bg-blue-700/60',
-    buttonPrimary: 'from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500',
-    input: 'bg-blue-800/50 border-blue-600 text-blue-100 placeholder-blue-300 focus:border-blue-400',
-    accent: 'text-blue-300',
-    accepted: 'bg-green-600/20 border-green-500/50 text-green-400',
-    rejected: 'bg-red-600/20 border-red-500/50 text-red-400'
-  },
-  green: {
-    name: 'Forest Green',
-    gradient: 'from-green-900 via-emerald-900 to-slate-900',
-    cardBg: 'from-green-800/60 to-emerald-800/60',
-    cardBorder: 'border-green-700/50',
-    text: 'text-green-100',
-    textSecondary: 'text-green-200',
-    textMuted: 'text-green-400',
-    button: 'bg-green-800/50 border-green-600 text-green-100 hover:bg-green-700/60',
-    buttonPrimary: 'from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500',
-    input: 'bg-green-800/50 border-green-600 text-green-100 placeholder-green-300 focus:border-green-400',
-    accent: 'text-green-300',
-    accepted: 'bg-green-600/20 border-green-500/50 text-green-400',
-    rejected: 'bg-red-600/20 border-red-500/50 text-red-400'
-  },
-  purple: {
-    name: 'Royal Purple',
-    gradient: 'from-purple-900 via-violet-900 to-slate-900',
-    cardBg: 'from-purple-800/60 to-violet-800/60',
-    cardBorder: 'border-purple-700/50',
-    text: 'text-purple-100',
-    textSecondary: 'text-purple-200',
-    textMuted: 'text-purple-400',
-    button: 'bg-purple-800/50 border-purple-600 text-purple-100 hover:bg-purple-700/60',
-    buttonPrimary: 'from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500',
-    input: 'bg-purple-800/50 border-purple-600 text-purple-100 placeholder-purple-300 focus:border-purple-400',
-    accent: 'text-purple-300',
-    accepted: 'bg-green-600/20 border-green-500/50 text-green-400',
-    rejected: 'bg-red-600/20 border-red-500/50 text-red-400'
-  },
-  orange: {
-    name: 'Sunset Orange',
-    gradient: 'from-orange-900 via-red-900 to-slate-900',
-    cardBg: 'from-orange-800/60 to-red-800/60',
-    cardBorder: 'border-orange-700/50',
-    text: 'text-orange-100',
-    textSecondary: 'text-orange-200',
-    textMuted: 'text-orange-400',
-    button: 'bg-orange-800/50 border-orange-600 text-orange-100 hover:bg-orange-700/60',
-    buttonPrimary: 'from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500',
-    input: 'bg-orange-800/50 border-orange-600 text-orange-100 placeholder-orange-300 focus:border-orange-400',
-    accent: 'text-orange-300',
-    accepted: 'bg-green-600/20 border-green-500/50 text-green-400',
-    rejected: 'bg-red-600/20 border-red-500/50 text-red-400'
-  }
-};
-
-const Index: React.FC = () => {
-  const navigate = useNavigate();
+const StudentManagementSystem = () => {
+  const { user, userProfile, signOut, isAdmin, isTeacher } = useAuth();
   const { toast } = useToast();
-  const [currentPage, setCurrentPage] = useState<'home' | 'list' | 'detail' | 'edit'>('home');
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [language, setLanguage] = useState<'ar' | 'en'>('en');
-  const [currentTheme, setCurrentTheme] = useState<Theme>('dark');
-  const [isLoading, setIsLoading] = useState(false);
-  const [visibleNotes, setVisibleNotes] = useState<Set<string>>(new Set());
-  const [visibleDetailNotes, setVisibleDetailNotes] = useState(false);
   
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     idNumber: '',
@@ -132,9 +40,10 @@ const Index: React.FC = () => {
     courseDate: null as Date | null,
     age: '',
     accepted: false,
-    notes: ''
+    notes: '',
+    iconType: 'User',
   });
-  
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [editFormData, setEditFormData] = useState({
     name: '',
     idNumber: '',
@@ -144,83 +53,10 @@ const Index: React.FC = () => {
     courseDate: null as Date | null,
     age: '',
     accepted: false,
-    notes: ''
+    notes: '',
+    iconType: 'User',
   });
-  
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const translations = {
-    ar: {
-      title: 'منصة التسجيل الأكاديمي',
-      subtitle: 'نظام إدارة الطلاب والدورات التدريبية',
-      registerStudent: 'تسجيل طالب جديد',
-      viewStudents: 'عرض الطلاب',
-      name: 'الاسم',
-      idNumber: 'رقم الهوية',
-      mobile: 'الجوال',
-      email: 'البريد الإلكتروني',
-      courseName: 'اسم البرنامج',
-      courseDate: 'تاريخ البرنامج',
-      age: 'العمر',
-      accepted: 'مقبول',
-      notes: 'ملاحظات',
-      submit: 'تسجيل',
-      back: 'رجوع',
-      studentList: 'قائمة الطلاب',
-      studentDetails: 'تفاصيل الطالب',
-      selectDate: 'اختر التاريخ',
-      registeredStudents: 'الطلاب المسجلين',
-      noStudents: 'لا يوجد طلاب مسجلين بعد',
-      startRegistering: 'ابدأ بتسجيل الطلاب الآن',
-      required: 'هذا الحقل مطلوب',
-      invalidEmail: 'البريد الإلكتروني غير صحيح',
-      invalidId: 'رقم الهوية يجب أن يكون 10 أرقام',
-      invalidMobile: 'رقم الجوال يجب أن يكون 10 أرقام',
-      registrationSuccess: 'تم التسجيل بنجاح!',
-      language: 'اللغة',
-      theme: 'المظهر',
-      status: 'الحالة',
-      loading: 'جاري التحميل...'
-    },
-    en: {
-      title: 'Academic Registration Platform',
-      subtitle: 'Student and Course Management System',
-      registerStudent: 'Register New Student',
-      viewStudents: 'View Students',
-      name: 'Name',
-      idNumber: 'ID Number',
-      mobile: 'Mobile',
-      email: 'Email',
-      courseName: 'Course Name',
-      courseDate: 'Course Date',
-      age: 'Age',
-      accepted: 'Accepted',
-      notes: 'Notes',
-      submit: 'Register',
-      back: 'Back',
-      studentList: 'Student List',
-      studentDetails: 'Student Details',
-      selectDate: 'Select Date',
-      registeredStudents: 'Registered Students',
-      noStudents: 'No students registered yet',
-      startRegistering: 'Start registering students now',
-      required: 'This field is required',
-      invalidEmail: 'Invalid email address',
-      invalidId: 'ID number must be 10 digits',
-      invalidMobile: 'Mobile number must be 10 digits',
-      registrationSuccess: 'Registration successful!',
-      language: 'Language',
-      theme: 'Theme',
-      status: 'Status',
-      loading: 'Loading...'
-    }
-  };
-
-  const t = translations[language];
-  const isRTL = language === 'ar';
-  const theme = themes[currentTheme];
-
-  // Helper function to format date for Supabase (YYYY-MM-DD format without timezone conversion)
   const formatDateForSupabase = (date: Date): string => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -228,133 +64,110 @@ const Index: React.FC = () => {
     return `${year}-${month}-${day}`;
   };
 
-  // Helper function to parse date from Supabase (create date in local timezone)
   const parseDateFromSupabase = (dateString: string): Date => {
     const [year, month, day] = dateString.split('-').map(Number);
     return new Date(year, month - 1, day);
   };
 
-  // Load students from Supabase on component mount
   useEffect(() => {
-    console.log('Component mounted, loading students...');
-    loadStudents();
-  }, []);
+    if (!user) return;
+    
+    const loadStudents = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('students')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-  const loadStudents = async () => {
-    try {
-      console.log('Loading students from Supabase...');
-      const { data, error } = await supabase
-        .from('students')
-        .select('*')
-        .order('created_at', { ascending: false });
+        if (error) {
+          toast({
+            title: "Error loading students",
+            description: error.message,
+            variant: "destructive",
+          });
+          return;
+        }
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
+        const studentsData: Student[] = data?.map((student: any) => ({
+          id: student.id,
+          name: student.name,
+          idNumber: student.id_number,
+          mobile: student.mobile,
+          email: student.email,
+          courseName: student.course_name,
+          courseDate: parseDateFromSupabase(student.course_date),
+          age: student.age,
+          accepted: student.accepted,
+          notes: student.notes || '',
+          iconType: student.icon_type || 'User',
+        })) || [];
+
+        setStudents(studentsData);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load students",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
       }
+    };
 
-      console.log('Students data received:', data);
-
-      const formattedStudents = data.map(student => ({
-        id: student.id,
-        name: student.name,
-        idNumber: student.id_number,
-        mobile: student.mobile,
-        email: student.email,
-        courseName: student.course_name,
-        courseDate: parseDateFromSupabase(student.course_date),
-        age: student.age,
-        accepted: student.accepted,
-        notes: student.notes || '',
-        icon: student.icon_type ? LUCIDE_ICONS.find(icon => icon.name === student.icon_type) || LUCIDE_ICONS[0] : LUCIDE_ICONS[0]
-      }));
-
-      console.log('Formatted students:', formattedStudents);
-      setStudents(formattedStudents);
-    } catch (error) {
-      console.error('Error loading students:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load students",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!formData.name.trim()) newErrors.name = t.required;
-    if (!formData.idNumber.trim()) newErrors.idNumber = t.required;
-    else if (formData.idNumber.length !== 10 || !/^\d+$/.test(formData.idNumber)) {
-      newErrors.idNumber = t.invalidId;
-    }
-    if (!formData.mobile.trim()) newErrors.mobile = t.required;
-    else if (formData.mobile.length !== 10 || !/^\d+$/.test(formData.mobile)) {
-      newErrors.mobile = t.invalidMobile;
-    }
-    if (!formData.email.trim()) newErrors.email = t.required;
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = t.invalidEmail;
-    }
-    if (!formData.courseName.trim()) newErrors.courseName = t.required;
-    if (!formData.courseDate) newErrors.courseDate = t.required;
-    if (!formData.age.trim()) newErrors.age = t.required;
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const validateEditForm = () => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!editFormData.name.trim()) newErrors.name = t.required;
-    if (!editFormData.idNumber.trim()) newErrors.idNumber = t.required;
-    else if (editFormData.idNumber.length !== 10 || !/^\d+$/.test(editFormData.idNumber)) {
-      newErrors.idNumber = t.invalidId;
-    }
-    if (!editFormData.mobile.trim()) newErrors.mobile = t.required;
-    else if (editFormData.mobile.length !== 10 || !/^\d+$/.test(editFormData.mobile)) {
-      newErrors.mobile = t.invalidMobile;
-    }
-    if (!editFormData.email.trim()) newErrors.email = t.required;
-    else if (!/\S+@\S+\.\S+/.test(editFormData.email)) {
-      newErrors.email = t.invalidEmail;
-    }
-    if (!editFormData.courseName.trim()) newErrors.courseName = t.required;
-    if (!editFormData.courseDate) newErrors.courseDate = t.required;
-    if (!editFormData.age.trim()) newErrors.age = t.required;
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    loadStudents();
+  }, [user, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (!isTeacher) {
+      toast({
+        title: "Access Denied",
+        description: "Only teachers and admins can add students",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    setIsLoading(true);
+    if (!formData.name || !formData.idNumber || !formData.mobile || !formData.email || !formData.courseName || !formData.courseDate || !formData.age) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
     try {
-      const randomIcon = LUCIDE_ICONS[Math.floor(Math.random() * LUCIDE_ICONS.length)];
-      
       const { data, error } = await supabase
         .from('students')
-        .insert({
-          name: formData.name,
-          id_number: formData.idNumber,
-          mobile: formData.mobile,
-          email: formData.email,
-          course_name: formData.courseName,
-          course_date: formatDateForSupabase(formData.courseDate!),
-          age: formData.age,
-          accepted: formData.accepted,
-          notes: formData.notes,
-          icon_type: randomIcon.name
-        })
+        .insert([
+          {
+            name: formData.name,
+            id_number: formData.idNumber,
+            mobile: formData.mobile,
+            email: formData.email,
+            course_name: formData.courseName,
+            course_date: formatDateForSupabase(formData.courseDate!),
+            age: formData.age,
+            accepted: formData.accepted,
+            notes: formData.notes,
+            icon_type: formData.iconType,
+            user_id: user?.id,
+          }
+        ])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        toast({
+          title: "Error adding student",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
 
       const newStudent: Student = {
         id: data.id,
@@ -367,10 +180,10 @@ const Index: React.FC = () => {
         age: data.age,
         accepted: data.accepted,
         notes: data.notes || '',
-        icon: randomIcon
+        iconType: data.icon_type || 'User',
       };
-      
-      setStudents([newStudent, ...students]);
+
+      setStudents(prev => [newStudent, ...prev]);
       setFormData({
         name: '',
         idNumber: '',
@@ -380,116 +193,46 @@ const Index: React.FC = () => {
         courseDate: null,
         age: '',
         accepted: false,
-        notes: ''
-      });
-      setErrors({});
-      
-      toast({
-        title: t.registrationSuccess,
-        description: "Student has been registered successfully",
+        notes: '',
+        iconType: 'User',
       });
 
-      setTimeout(() => {
-        setCurrentPage('list');
-      }, 1000);
-    } catch (error: any) {
-      console.error('Error saving student:', error);
+      toast({
+        title: "Student added successfully",
+        description: `${newStudent.name} has been added to the system`,
+      });
+    } catch (error) {
       toast({
         title: "Error",
-        description: error.message || "Failed to register student",
+        description: "Failed to add student",
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
-    if ((field === 'idNumber' || field === 'mobile') && value.length > 10) {
-      return;
-    }
-    if ((field === 'idNumber' || field === 'mobile') && !/^\d*$/.test(value)) {
-      return;
-    }
-    
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
-
-  const handleEditInputChange = (field: string, value: string) => {
-    if ((field === 'idNumber' || field === 'mobile') && value.length > 10) {
-      return;
-    }
-    if ((field === 'idNumber' || field === 'mobile') && !/^\d*$/.test(value)) {
-      return;
-    }
-    
-    setEditFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
-
-  const handleDeleteStudent = async (studentId: string) => {
-    if (!confirm(language === 'ar' ? 'هل أنت متأكد من حذف هذا الطالب؟' : 'Are you sure you want to delete this student?')) {
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      const { error } = await supabase
-        .from('students')
-        .delete()
-        .eq('id', studentId);
-
-      if (error) throw error;
-
-      setStudents(students.filter(student => student.id !== studentId));
-      
-      if (selectedStudent?.id === studentId) {
-        setCurrentPage('list');
-        setSelectedStudent(null);
-      }
-
-      toast({
-        title: language === 'ar' ? 'تم الحذف بنجاح' : 'Deleted successfully',
-        description: language === 'ar' ? 'تم حذف الطالب بنجاح' : 'Student has been deleted successfully',
-      });
-    } catch (error: any) {
-      console.error('Error deleting student:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete student",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleEditStudent = (student: Student) => {
-    setEditFormData({
-      name: student.name,
-      idNumber: student.idNumber,
-      mobile: student.mobile,
-      email: student.email,
-      courseName: student.courseName,
-      courseDate: student.courseDate,
-      age: student.age,
-      accepted: student.accepted,
-      notes: student.notes || ''
-    });
-    setSelectedStudent(student);
-    setCurrentPage('edit');
-  };
-
-  const handleUpdateStudent = async (e: React.FormEvent) => {
+  const handleEdit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateEditForm() || !selectedStudent) return;
+    if (!isTeacher) {
+      toast({
+        title: "Access Denied",
+        description: "Only teachers and admins can edit students",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    setIsLoading(true);
+    if (!editingStudent || !editFormData.name || !editFormData.idNumber || !editFormData.mobile || !editFormData.email || !editFormData.courseName || !editFormData.courseDate || !editFormData.age) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('students')
@@ -503,12 +246,20 @@ const Index: React.FC = () => {
           age: editFormData.age,
           accepted: editFormData.accepted,
           notes: editFormData.notes,
+          icon_type: editFormData.iconType,
         })
-        .eq('id', selectedStudent.id)
+        .eq('id', editingStudent.id)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        toast({
+          title: "Error updating student",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
 
       const updatedStudent: Student = {
         id: data.id,
@@ -521,951 +272,182 @@ const Index: React.FC = () => {
         age: data.age,
         accepted: data.accepted,
         notes: data.notes || '',
-        icon: selectedStudent.icon
+        iconType: data.icon_type || 'User',
       };
-      
-      setStudents(students.map(student => 
-        student.id === selectedStudent.id ? updatedStudent : student
+
+      setStudents(prev => prev.map(student => 
+        student.id === editingStudent.id ? updatedStudent : student
       ));
-      setSelectedStudent(updatedStudent);
-      setErrors({});
-      
-      toast({
-        title: language === 'ar' ? 'تم التحديث بنجاح' : 'Updated successfully',
-        description: language === 'ar' ? 'تم تحديث بيانات الطالب بنجاح' : 'Student information has been updated successfully',
+
+      setEditingStudent(null);
+      setEditFormData({
+        name: '',
+        idNumber: '',
+        mobile: '',
+        email: '',
+        courseName: '',
+        courseDate: null,
+        age: '',
+        accepted: false,
+        notes: '',
+        iconType: 'User',
       });
 
-      setCurrentPage('detail');
-    } catch (error: any) {
-      console.error('Error updating student:', error);
+      toast({
+        title: "Student updated successfully",
+        description: `${updatedStudent.name}'s information has been updated`,
+      });
+    } catch (error) {
       toast({
         title: "Error",
-        description: error.message || "Failed to update student",
+        description: "Failed to update student",
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const toggleStudentAcceptance = async (studentId: string) => {
-    try {
-      const student = students.find(s => s.id === studentId);
-      if (!student) return;
-
-      const { error } = await supabase
-        .from('students')
-        .update({ accepted: !student.accepted })
-        .eq('id', studentId);
-
-      if (error) throw error;
-
-      setStudents(students.map(student => 
-        student.id === studentId 
-          ? { ...student, accepted: !student.accepted }
-          : student
-      ));
-
-      if (selectedStudent?.id === studentId) {
-        setSelectedStudent({ ...selectedStudent, accepted: !selectedStudent.accepted });
-      }
-    } catch (error) {
-      console.error('Error updating student:', error);
+  const handleDelete = async (studentId: string) => {
+    if (!isAdmin) {
       toast({
-        title: "Error",
-        description: "Failed to update student status",
+        title: "Access Denied",
+        description: "Only administrators can delete students",
         variant: "destructive",
       });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('students')
+        .delete()
+        .eq('id', studentId);
+
+      if (error) {
+        toast({
+          title: "Error deleting student",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setStudents(prev => prev.filter(student => student.id !== studentId));
+      toast({
+        title: "Student deleted successfully",
+        description: "The student has been removed from the system",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete student",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const toggleNotesVisibility = (studentId: string) => {
-    setVisibleNotes(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(studentId)) {
-        newSet.delete(studentId);
-      } else {
-        newSet.add(studentId);
-      }
-      return newSet;
-    });
-  };
-
-  const toggleDetailNotesVisibility = () => {
-    setVisibleDetailNotes(prev => !prev);
-  };
-
-  const ThemeSelector = () => (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className={`${theme.button} gap-2`}
-        >
-          <Palette className="w-4 h-4" />
-          {theme.name}
+  return (
+    <div className="min-h-screen">
+      <div className="max-w-7xl mx-auto p-6">
+        <h1 className="text-2xl font-bold">Student Management System</h1>
+        <Button onClick={signOut} variant="outline" className="mt-4">
+          <LogOut className="h-4 w-4" /> Sign Out
         </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-48 p-2">
-        <div className="space-y-2">
-          {Object.entries(themes).map(([key, themeOption]) => (
-            <Button
-              key={key}
-              variant={currentTheme === key ? "default" : "ghost"}
-              className="w-full justify-start"
-              onClick={() => setCurrentTheme(key as Theme)}
-            >
-              <div className={`w-4 h-4 rounded-full mr-2 bg-gradient-to-r ${themeOption.gradient.split(' ').slice(0, 2).join(' ')}`} />
-              {themeOption.name}
-            </Button>
-          ))}
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-
-  const renderHomePage = () => (
-    <div className={`min-h-screen bg-gradient-to-br ${theme.gradient} p-4`}>
-      <div className="max-w-2xl mx-auto">
-        {/* Header Controls */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex gap-2">
-            <ThemeSelector />
-            <Button
-              onClick={() => navigate('/notes')}
-              variant="outline"
-              className={`${theme.button} gap-2`}
-            >
-              <FileText className="w-4 h-4" />
-              {language === 'ar' ? 'ملاحظاتي' : 'My Notes'}
-            </Button>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
-            className={theme.button}
-          >
-            {language === 'ar' ? 'English' : 'العربية'}
-          </Button>
-        </div>
-
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className={`bg-gradient-to-br ${theme.cardBg} backdrop-blur-sm rounded-2xl p-8 mb-6 ${theme.cardBorder} border`}>
-            <h1 className={`text-4xl md:text-5xl font-bold ${theme.text} mb-4 ${isRTL ? 'font-arabic' : ''}`}>
-              {t.title}
-            </h1>
-            <p className={`text-xl ${theme.textSecondary} ${isRTL ? 'font-arabic' : ''}`}>
-              {t.subtitle}
-            </p>
-          </div>
-        </div>
-
-        {/* Navigation Cards */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <Card className={`bg-gradient-to-br ${theme.cardBg} ${theme.cardBorder} backdrop-blur-sm hover:scale-105 transition-transform duration-300 cursor-pointer`}>
-            <CardContent className="p-6 text-center">
-              <UserPlus className={`w-12 h-12 ${theme.text} mx-auto mb-4`} />
-              <h3 className={`text-xl font-semibold ${theme.text} mb-2 ${isRTL ? 'font-arabic' : ''}`}>
-                {t.registerStudent}
-              </h3>
+        {/* Add Student Form */}
+        {isTeacher && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Add Student</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit}>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Name</Label>
+                    <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
+                  </div>
+                  <div>
+                    <Label>ID Number</Label>
+                    <Input value={formData.idNumber} onChange={(e) => setFormData({ ...formData, idNumber: e.target.value })} required />
+                  </div>
+                  <div>
+                    <Label>Mobile</Label>
+                    <Input value={formData.mobile} onChange={(e) => setFormData({ ...formData, mobile: e.target.value })} required />
+                  </div>
+                  <div>
+                    <Label>Email</Label>
+                    <Input value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
+                  </div>
+                  <div>
+                    <Label>Course Name</Label>
+                    <Input value={formData.courseName} onChange={(e) => setFormData({ ...formData, courseName: e.target.value })} required />
+                  </div>
+                  <div>
+                    <Label>Course Date</Label>
+                    <Input type="date" value={formData.courseDate ? formData.courseDate.toISOString().split('T')[0] : ''} onChange={(e) => setFormData({ ...formData, courseDate: new Date(e.target.value) })} required />
+                  </div>
+                  <div>
+                    <Label>Age</Label>
+                    <Input value={formData.age} onChange={(e) => setFormData({ ...formData, age: e.target.value })} required />
+                  </div>
+                  <div>
+                    <Label>Notes</Label>
+                    <Textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
+                  </div>
+                </div>
+                <Button type="submit" className="mt-4">Add Student</Button>
+              </form>
             </CardContent>
           </Card>
-          
-          <Card 
-            className={`bg-gradient-to-br ${theme.cardBg} ${theme.cardBorder} backdrop-blur-sm hover:scale-105 transition-transform duration-300 cursor-pointer`}
-            onClick={() => setCurrentPage('list')}
-          >
-            <CardContent className="p-6 text-center">
-              <Users className={`w-12 h-12 ${theme.text} mx-auto mb-4`} />
-              <h3 className={`text-xl font-semibold ${theme.text} mb-2 ${isRTL ? 'font-arabic' : ''}`}>
-                {t.viewStudents}
-              </h3>
-              <p className={`${theme.textSecondary} text-sm`}>
-                {students.length} {language === 'ar' ? 'طالب' : 'students'}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Registration Form */}
-        <Card className={`bg-gradient-to-br ${theme.cardBg} ${theme.cardBorder} backdrop-blur-sm border`}>
+        )}
+        {/* Students List */}
+        <Card className="mt-6">
           <CardHeader>
-            <CardTitle className={`text-2xl ${theme.text} text-center ${isRTL ? 'font-arabic' : ''}`}>
-              {t.registerStudent}
-            </CardTitle>
+            <CardTitle>Students</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Name */}
-                <div className="space-y-2">
-                  <Label htmlFor="name" className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
-                    {t.name}
-                  </Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    className={theme.input}
-                  />
-                  {errors.name && <p className="text-red-400 text-sm">{errors.name}</p>}
-                </div>
-
-                {/* ID Number */}
-                <div className="space-y-2">
-                  <Label htmlFor="idNumber" className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
-                    {t.idNumber}
-                  </Label>
-                  <Input
-                    id="idNumber"
-                    value={formData.idNumber}
-                    onChange={(e) => handleInputChange('idNumber', e.target.value)}
-                    maxLength={10}
-                    className={theme.input}
-                  />
-                  {errors.idNumber && <p className="text-red-400 text-sm">{errors.idNumber}</p>}
-                </div>
-
-                {/* Mobile */}
-                <div className="space-y-2">
-                  <Label htmlFor="mobile" className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
-                    {t.mobile}
-                  </Label>
-                  <Input
-                    id="mobile"
-                    value={formData.mobile}
-                    onChange={(e) => handleInputChange('mobile', e.target.value)}
-                    maxLength={10}
-                    className={theme.input}
-                  />
-                  {errors.mobile && <p className="text-red-400 text-sm">{errors.mobile}</p>}
-                </div>
-
-                {/* Email */}
-                <div className="space-y-2">
-                  <Label htmlFor="email" className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
-                    {t.email}
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    className={theme.input}
-                  />
-                  {errors.email && <p className="text-red-400 text-sm">{errors.email}</p>}
-                </div>
-
-                {/* Course Name */}
-                <div className="space-y-2">
-                  <Label htmlFor="courseName" className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
-                    {t.courseName}
-                  </Label>
-                  <Input
-                    id="courseName"
-                    value={formData.courseName}
-                    onChange={(e) => handleInputChange('courseName', e.target.value)}
-                    className={theme.input}
-                  />
-                  {errors.courseName && <p className="text-red-400 text-sm">{errors.courseName}</p>}
-                </div>
-
-                {/* Age */}
-                <div className="space-y-2">
-                  <Label htmlFor="age" className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
-                    {t.age}
-                  </Label>
-                  <Input
-                    id="age"
-                    value={formData.age}
-                    onChange={(e) => handleInputChange('age', e.target.value)}
-                    className={theme.input}
-                  />
-                  {errors.age && <p className="text-red-400 text-sm">{errors.age}</p>}
-                </div>
-              </div>
-
-              {/* Course Date */}
-              <div className="space-y-2">
-                <Label className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
-                  {t.courseDate}
-                </Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        `w-full justify-start text-left font-normal ${theme.input}`,
-                        !formData.courseDate && theme.textMuted
+            {loading ? (
+              <p>Loading...</p>
+            ) : (
+              <ul>
+                {students.map(student => (
+                  <li key={student.id} className="flex justify-between items-center">
+                    <span>{student.name}</span>
+                    <div>
+                      {isTeacher && (
+                        <Button onClick={() => {
+                          setEditingStudent(student);
+                          setEditFormData({
+                            name: student.name,
+                            idNumber: student.idNumber,
+                            mobile: student.mobile,
+                            email: student.email,
+                            courseName: student.courseName,
+                            courseDate: student.courseDate,
+                            age: student.age,
+                            accepted: student.accepted,
+                            notes: student.notes,
+                            iconType: student.iconType,
+                          });
+                        }}>Edit</Button>
                       )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.courseDate ? format(formData.courseDate, "PPP") : t.selectDate}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <CalendarComponent
-                      mode="single"
-                      selected={formData.courseDate || undefined}
-                      onSelect={(date) => setFormData(prev => ({ ...prev, courseDate: date || null }))}
-                      initialFocus
-                      className="p-3 pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-                {errors.courseDate && <p className="text-red-400 text-sm">{errors.courseDate}</p>}
-              </div>
-
-              {/* Notes */}
-              <div className="space-y-2">
-                <Label htmlFor="notes" className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
-                  {t.notes}
-                </Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder={language === 'ar' ? 'أدخل ملاحظات حول الطالب...' : 'Enter notes about the student...'}
-                  className={`${theme.input} resize-none`}
-                  rows={3}
-                />
-              </div>
-
-              {/* Acceptance Status */}
-              <div className="space-y-2">
-                <Label className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
-                  {t.accepted}
-                </Label>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="accepted"
-                    checked={formData.accepted}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, accepted: checked }))}
-                  />
-                  <Label htmlFor="accepted" className={`${theme.textSecondary} text-sm`}>
-                    {formData.accepted ? (language === 'ar' ? 'مقبول' : 'Accepted') : (language === 'ar' ? 'لم يتم بعد' : 'Not yet')}
-                  </Label>
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className={`w-full bg-gradient-to-r ${theme.buttonPrimary} text-white font-semibold py-3 text-lg`}
-              >
-                {isLoading ? t.loading : t.submit}
-              </Button>
-            </form>
+                      {isAdmin && (
+                        <Button onClick={() => handleDelete(student.id)}>Delete</Button>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardContent>
         </Card>
       </div>
     </div>
   );
-
-  const renderStudentList = () => (
-    <div className={`min-h-screen bg-gradient-to-br ${theme.gradient} p-4`} dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <Button
-            onClick={() => setCurrentPage('home')}
-            variant="outline"
-            className={theme.button}
-          >
-            {isRTL ? <ArrowRight className="w-4 h-4 mr-2" /> : <ArrowLeft className="w-4 h-4 mr-2" />}
-            {t.back}
-          </Button>
-          
-          <h1 className={`text-3xl font-bold ${theme.text} ${isRTL ? 'font-arabic' : ''}`}>
-            {t.studentList}
-          </h1>
-          
-          <div className="flex gap-2">
-            <ThemeSelector />
-            <Button
-              variant="outline"
-              onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
-              className={theme.button}
-            >
-              {language === 'ar' ? 'English' : 'العربية'}
-            </Button>
-          </div>
-        </div>
-
-        {students.length === 0 ? (
-          <Card className={`bg-gradient-to-br ${theme.cardBg} ${theme.cardBorder} backdrop-blur-sm border`}>
-            <CardContent className="p-12 text-center">
-              <Users className={`w-16 h-16 ${theme.textMuted} mx-auto mb-4`} />
-              <h3 className={`text-2xl font-semibold ${theme.text} mb-2 ${isRTL ? 'font-arabic' : ''}`}>
-                {t.noStudents}
-              </h3>
-              <p className={`${theme.textSecondary} mb-6 ${isRTL ? 'font-arabic' : ''}`}>
-                {t.startRegistering}
-              </p>
-              <Button
-                onClick={() => setCurrentPage('home')}
-                className={`bg-gradient-to-r ${theme.buttonPrimary} text-white`}
-              >
-                {t.registerStudent}
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {students.map((student) => {
-              const IconComponent = student.icon;
-              const isNotesVisible = visibleNotes.has(student.id);
-              return (
-                <Card
-                  key={student.id}
-                  className={`bg-gradient-to-br ${theme.cardBg} ${theme.cardBorder} backdrop-blur-sm hover:scale-105 transition-all duration-300 border`}
-                >
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center flex-1">
-                        <div className={`bg-gradient-to-br ${theme.cardBg} p-3 rounded-full ${isRTL ? 'ml-4' : 'mr-4'} shadow-lg`}>
-                          <IconComponent className={`w-8 h-8 ${theme.text}`} />
-                        </div>
-                        <div className="flex-1">
-                          <h3 
-                            className={`text-xl font-semibold ${theme.text} mb-1 cursor-pointer hover:underline`}
-                            onClick={() => {
-                              setSelectedStudent(student);
-                              setCurrentPage('detail');
-                            }}
-                          >
-                            {student.name}
-                          </h3>
-                          <p className={`${theme.textSecondary} text-sm font-medium`}>
-                            {student.courseName}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex flex-col items-center gap-3 min-w-fit">
-                        <div className={`px-4 py-2 rounded-full text-xs font-medium border transition-all duration-200 ${
-                          student.accepted ? theme.accepted : theme.rejected
-                        }`}>
-                          <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            {student.accepted ? (
-                              <>
-                                <Check className="w-3 h-3" />
-                                <span>{language === 'ar' ? 'مقبول' : 'Accepted'}</span>
-                              </>
-                            ) : (
-                              <>
-                                <X className="w-3 h-3" />
-                                <span>{language === 'ar' ? 'لم يتم بعد' : 'Not yet'}</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            checked={student.accepted}
-                            onCheckedChange={() => toggleStudentAcceptance(student.id)}
-                          />
-                          <span className={`text-xs ${theme.textSecondary} ${isRTL ? 'font-arabic' : ''}`}>
-                            {language === 'ar' ? 'تبديل الحالة' : 'Toggle'}
-                          </span>
-                        </div>
-                        
-                        {/* Action Buttons */}
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditStudent(student)}
-                            className={`h-8 w-8 p-0 ${theme.button}`}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteStudent(student.id)}
-                            className={`h-8 w-8 p-0 ${theme.button} hover:text-red-400`}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-3 text-sm">
-                      <div className={`bg-gradient-to-r ${theme.cardBg} p-3 rounded-lg`}>
-                        <p className={theme.textSecondary}>
-                          <span className={`${theme.accent} font-medium`}>{t.mobile}:</span>
-                          <span className={`${theme.text} ${isRTL ? 'mr-2' : 'ml-2'}`}>{student.mobile}</span>
-                        </p>
-                      </div>
-                      <div className={`bg-gradient-to-r ${theme.cardBg} p-3 rounded-lg`}>
-                        <p className={theme.textSecondary}>
-                          <span className={`${theme.accent} font-medium`}>{t.age}:</span>
-                          <span className={`${theme.text} ${isRTL ? 'mr-2' : 'ml-2'}`}>{student.age}</span>
-                        </p>
-                      </div>
-                      <div className={`bg-gradient-to-r ${theme.cardBg} p-3 rounded-lg`}>
-                        <p className={theme.textSecondary}>
-                          <span className={`${theme.accent} font-medium`}>{t.courseDate}:</span>
-                          <span className={`${theme.text} ${isRTL ? 'mr-2' : 'ml-2'}`}>{format(student.courseDate, "PPP")}</span>
-                        </p>
-                      </div>
-                      {student.notes && (
-                        <div className={`bg-gradient-to-r ${theme.cardBg} p-3 rounded-lg`}>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className={`${theme.accent} font-medium`}>{t.notes}:</span>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleNotesVisibility(student.id)}
-                              className={`h-6 w-6 p-0 ${theme.button}`}
-                            >
-                              {isNotesVisible ? (
-                                <EyeOff className="w-4 h-4" />
-                              ) : (
-                                <Eye className="w-4 h-4" />
-                              )}
-                            </Button>
-                          </div>
-                          {isNotesVisible && (
-                            <p className={`${theme.text} ${isRTL ? 'mr-2' : 'ml-2'}`}>
-                              {student.notes}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
-  const renderStudentDetail = () => {
-    if (!selectedStudent) return null;
-    
-    const IconComponent = selectedStudent.icon;
-    
-    return (
-      <div className={`min-h-screen bg-gradient-to-br ${theme.gradient} p-4`} dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <Button
-              onClick={() => setCurrentPage('list')}
-              variant="outline"
-              className={theme.button}
-            >
-              {isRTL ? <ArrowRight className="w-4 h-4 mr-2" /> : <ArrowLeft className="w-4 h-4 mr-2" />}
-              {t.back}
-            </Button>
-            
-            <h1 className={`text-3xl font-bold ${theme.text} ${isRTL ? 'font-arabic' : ''}`}>
-              {t.studentDetails}
-            </h1>
-            
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => handleEditStudent(selectedStudent)}
-                className={`${theme.button} gap-2`}
-              >
-                <Edit className="w-4 h-4" />
-                {language === 'ar' ? 'تعديل' : 'Edit'}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleDeleteStudent(selectedStudent.id)}
-                className={`${theme.button} gap-2 hover:text-red-400`}
-              >
-                <Trash2 className="w-4 h-4" />
-                {language === 'ar' ? 'حذف' : 'Delete'}
-              </Button>
-              <ThemeSelector />
-              <Button
-                variant="outline"
-                onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
-                className={theme.button}
-              >
-                {language === 'ar' ? 'English' : 'العربية'}
-              </Button>
-            </div>
-          </div>
-
-          {/* Student Detail Card */}
-          <Card className={`bg-gradient-to-br ${theme.cardBg} ${theme.cardBorder} backdrop-blur-sm border shadow-2xl`}>
-            <CardContent className="p-8">
-              {/* Header with Icon and Name */}
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center">
-                  <div className={`bg-gradient-to-br ${theme.cardBg} p-6 rounded-2xl mr-6 shadow-xl`}>
-                    <IconComponent className={`w-16 h-16 ${theme.text}`} />
-                  </div>
-                  <div>
-                    <h2 className={`text-4xl font-bold ${theme.text} mb-2 ${isRTL ? 'font-arabic' : ''}`}>
-                      {selectedStudent.name}
-                    </h2>
-                    <p className={`text-xl ${theme.textSecondary} font-medium ${isRTL ? 'font-arabic' : ''}`}>
-                      {selectedStudent.courseName}
-                    </p>
-                  </div>
-                </div>
-                
-                {/* Status Section */}
-                <div className="text-center">
-                  <p className={`${theme.textSecondary} text-sm mb-2 ${isRTL ? 'font-arabic' : ''}`}>
-                    {t.status}
-                  </p>
-                  <div className={`px-4 py-2 rounded-lg text-lg font-medium border ${
-                    selectedStudent.accepted ? theme.accepted : theme.rejected
-                  }`}>
-                    {selectedStudent.accepted ? (
-                      <div className="flex items-center gap-2">
-                        <Check className="w-5 h-5" />
-                        {language === 'ar' ? 'مقبول' : 'Accepted'}
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <X className="w-5 h-5" />
-                        {language === 'ar' ? 'لم يتم بعد' : 'Not yet'}
-                      </div>
-                    )}
-                  </div>
-                  <div className="mt-4">
-                    <Switch
-                      checked={selectedStudent.accepted}
-                      onCheckedChange={() => {
-                        toggleStudentAcceptance(selectedStudent.id);
-                        setSelectedStudent({...selectedStudent, accepted: !selectedStudent.accepted});
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Details Grid */}
-              <div className="grid md:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                  <div className={`bg-gradient-to-r ${theme.cardBg} p-6 rounded-xl shadow-lg`}>
-                    <p className={`${theme.accent} text-sm font-medium mb-2 ${isRTL ? 'font-arabic' : ''}`}>
-                      {t.idNumber}
-                    </p>
-                    <p className={`${theme.text} text-lg font-semibold`}>
-                      {selectedStudent.idNumber}
-                    </p>
-                  </div>
-                  
-                  <div className={`bg-gradient-to-r ${theme.cardBg} p-6 rounded-xl shadow-lg`}>
-                    <p className={`${theme.accent} text-sm font-medium mb-2 ${isRTL ? 'font-arabic' : ''}`}>
-                      {t.mobile}
-                    </p>
-                    <p className={`${theme.text} text-lg font-semibold`}>
-                      {selectedStudent.mobile}
-                    </p>
-                  </div>
-                  
-                  <div className={`bg-gradient-to-r ${theme.cardBg} p-6 rounded-xl shadow-lg`}>
-                    <p className={`${theme.accent} text-sm font-medium mb-2 ${isRTL ? 'font-arabic' : ''}`}>
-                      {t.age}
-                    </p>
-                    <p className={`${theme.text} text-lg font-semibold`}>
-                      {selectedStudent.age}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="space-y-6">
-                  <div className={`bg-gradient-to-r ${theme.cardBg} p-6 rounded-xl shadow-lg`}>
-                    <p className={`${theme.accent} text-sm font-medium mb-2 ${isRTL ? 'font-arabic' : ''}`}>
-                      {t.email}
-                    </p>
-                    <p className={`${theme.text} text-lg font-semibold break-all`}>
-                      {selectedStudent.email}
-                    </p>
-                  </div>
-                  
-                  <div className={`bg-gradient-to-r ${theme.cardBg} p-6 rounded-xl shadow-lg`}>
-                    <p className={`${theme.accent} text-sm font-medium mb-2 ${isRTL ? 'font-arabic' : ''}`}>
-                      {t.courseDate}
-                    </p>
-                    <p className={`${theme.text} text-lg font-semibold`}>
-                      {format(selectedStudent.courseDate, "PPPP")}
-                    </p>
-                  </div>
-
-                  {selectedStudent.notes && (
-                    <div className={`bg-gradient-to-r ${theme.cardBg} p-6 rounded-xl shadow-lg`}>
-                      <div className="flex items-center justify-between mb-2">
-                        <p className={`${theme.accent} text-sm font-medium ${isRTL ? 'font-arabic' : ''}`}>
-                          {t.notes}
-                        </p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={toggleDetailNotesVisibility}
-                          className={`h-6 w-6 p-0 ${theme.button}`}
-                        >
-                          {visibleDetailNotes ? (
-                            <EyeOff className="w-4 h-4" />
-                          ) : (
-                            <Eye className="w-4 h-4" />
-                          )}
-                        </Button>
-                      </div>
-                      {visibleDetailNotes && (
-                        <p className={`${theme.text} text-lg font-semibold`}>
-                          {selectedStudent.notes}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  };
-
-  const renderEditStudent = () => {
-    if (!selectedStudent) return null;
-    
-    return (
-      <div className={`min-h-screen bg-gradient-to-br ${theme.gradient} p-4`} dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <Button
-              onClick={() => setCurrentPage('detail')}
-              variant="outline"
-              className={theme.button}
-            >
-              {isRTL ? <ArrowRight className="w-4 h-4 mr-2" /> : <ArrowLeft className="w-4 h-4 mr-2" />}
-              {t.back}
-            </Button>
-            
-            <h1 className={`text-3xl font-bold ${theme.text} ${isRTL ? 'font-arabic' : ''}`}>
-              {language === 'ar' ? 'تعديل بيانات الطالب' : 'Edit Student'}
-            </h1>
-            
-            <div className="flex gap-2">
-              <ThemeSelector />
-              <Button
-                variant="outline"
-                onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
-                className={theme.button}
-              >
-                {language === 'ar' ? 'English' : 'العربية'}
-              </Button>
-            </div>
-          </div>
-
-          {/* Edit Form */}
-          <Card className={`bg-gradient-to-br ${theme.cardBg} ${theme.cardBorder} backdrop-blur-sm border`}>
-            <CardHeader>
-              <CardTitle className={`text-2xl ${theme.text} text-center ${isRTL ? 'font-arabic' : ''}`}>
-                {language === 'ar' ? 'تعديل بيانات الطالب' : 'Edit Student Information'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleUpdateStudent} className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-                <div className="grid md:grid-cols-2 gap-6">
-                  {/* Name */}
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-name" className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
-                      {t.name}
-                    </Label>
-                    <Input
-                      id="edit-name"
-                      value={editFormData.name}
-                      onChange={(e) => handleEditInputChange('name', e.target.value)}
-                      className={theme.input}
-                    />
-                    {errors.name && <p className="text-red-400 text-sm">{errors.name}</p>}
-                  </div>
-
-                  {/* ID Number */}
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-idNumber" className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
-                      {t.idNumber}
-                    </Label>
-                    <Input
-                      id="edit-idNumber"
-                      value={editFormData.idNumber}
-                      onChange={(e) => handleEditInputChange('idNumber', e.target.value)}
-                      maxLength={10}
-                      className={theme.input}
-                    />
-                    {errors.idNumber && <p className="text-red-400 text-sm">{errors.idNumber}</p>}
-                  </div>
-
-                  {/* Mobile */}
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-mobile" className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
-                      {t.mobile}
-                    </Label>
-                    <Input
-                      id="edit-mobile"
-                      value={editFormData.mobile}
-                      onChange={(e) => handleEditInputChange('mobile', e.target.value)}
-                      maxLength={10}
-                      className={theme.input}
-                    />
-                    {errors.mobile && <p className="text-red-400 text-sm">{errors.mobile}</p>}
-                  </div>
-
-                  {/* Email */}
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-email" className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
-                      {t.email}
-                    </Label>
-                    <Input
-                      id="edit-email"
-                      type="email"
-                      value={editFormData.email}
-                      onChange={(e) => handleEditInputChange('email', e.target.value)}
-                      className={theme.input}
-                    />
-                    {errors.email && <p className="text-red-400 text-sm">{errors.email}</p>}
-                  </div>
-
-                  {/* Course Name */}
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-courseName" className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
-                      {t.courseName}
-                    </Label>
-                    <Input
-                      id="edit-courseName"
-                      value={editFormData.courseName}
-                      onChange={(e) => handleEditInputChange('courseName', e.target.value)}
-                      className={theme.input}
-                    />
-                    {errors.courseName && <p className="text-red-400 text-sm">{errors.courseName}</p>}
-                  </div>
-
-                  {/* Age */}
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-age" className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
-                      {t.age}
-                    </Label>
-                    <Input
-                      id="edit-age"
-                      value={editFormData.age}
-                      onChange={(e) => handleEditInputChange('age', e.target.value)}
-                      className={theme.input}
-                    />
-                    {errors.age && <p className="text-red-400 text-sm">{errors.age}</p>}
-                  </div>
-                </div>
-
-                {/* Course Date */}
-                <div className="space-y-2">
-                  <Label className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
-                    {t.courseDate}
-                  </Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          `w-full justify-start text-left font-normal ${theme.input}`,
-                          !editFormData.courseDate && theme.textMuted
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {editFormData.courseDate ? format(editFormData.courseDate, "PPP") : t.selectDate}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <CalendarComponent
-                        mode="single"
-                        selected={editFormData.courseDate || undefined}
-                        onSelect={(date) => setEditFormData(prev => ({ ...prev, courseDate: date || null }))}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  {errors.courseDate && <p className="text-red-400 text-sm">{errors.courseDate}</p>}
-                </div>
-
-                {/* Notes */}
-                <div className="space-y-2">
-                  <Label htmlFor="edit-notes" className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
-                    {t.notes}
-                  </Label>
-                  <Textarea
-                    id="edit-notes"
-                    value={editFormData.notes}
-                    onChange={(e) => setEditFormData(prev => ({ ...prev, notes: e.target.value }))}
-                    placeholder={language === 'ar' ? 'أدخل ملاحظات حول الطالب...' : 'Enter notes about the student...'}
-                    className={`${theme.input} resize-none`}
-                    rows={3}
-                  />
-                </div>
-
-                {/* Acceptance Status */}
-                <div className="space-y-2">
-                  <Label className={`${theme.text} text-base ${isRTL ? 'font-arabic' : ''}`}>
-                    {t.accepted}
-                  </Label>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="edit-accepted"
-                      checked={editFormData.accepted}
-                      onCheckedChange={(checked) => setEditFormData(prev => ({ ...prev, accepted: checked }))}
-                    />
-                    <Label htmlFor="edit-accepted" className={`${theme.textSecondary} text-sm`}>
-                      {editFormData.accepted ? (language === 'ar' ? 'مقبول' : 'Accepted') : (language === 'ar' ? 'لم يتم بعد' : 'Not yet')}
-                    </Label>
-                  </div>
-                </div>
-
-                {/* Submit Buttons */}
-                <div className="flex gap-4">
-                  <Button
-                    type="submit"
-                    disabled={isLoading}
-                    className={`flex-1 bg-gradient-to-r ${theme.buttonPrimary} text-white font-semibold py-3 text-lg`}
-                  >
-                    {isLoading ? t.loading : (language === 'ar' ? 'تحديث' : 'Update')}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setCurrentPage('detail')}
-                    className={`flex-1 ${theme.button}`}
-                  >
-                    {language === 'ar' ? 'إلغاء' : 'Cancel'}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  };
-
-  // Render current page
-  switch (currentPage) {
-    case 'list':
-      return renderStudentList();
-    case 'detail':
-      return renderStudentDetail();
-    case 'edit':
-      return renderEditStudent();
-    default:
-      return renderHomePage();
-  }
 };
 
-export default Index;
+export default StudentManagementSystem;
